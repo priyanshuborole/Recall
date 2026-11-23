@@ -13,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -114,6 +115,9 @@ object RecallTheme {
     val isDark: Boolean
         @Composable @ReadOnlyComposable get() = LocalIsDark.current
 }
+
+/** The screen colour for a theme and mode, for platform windows drawn behind Compose. */
+fun windowBackgroundColor(theme: AppTheme, dark: Boolean): Color = Palettes.of(theme, dark).background
 
 /** Resolves the saved mode to light or dark. */
 @Composable

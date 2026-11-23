@@ -1,0 +1,24 @@
+<resources>
+    <!-- Android remembers the chosen style and uses it for the launch screen before app code runs. -->
+    <color name="recall_splash_warm_system">#F6EFE4</color>
+    <color name="recall_splash_fresh_system">#F1F6F3</color>
+
+    <style name="Theme.Recall.Splash.WarmSystem" parent="Theme.Recall">
+        <item name="android:windowSplashScreenBackground">@color/recall_splash_warm_system</item>
+    </style>
+    <style name="Theme.Recall.Splash.WarmLight" parent="Theme.Recall">
+        <item name="android:windowSplashScreenBackground">#F6EFE4</item>
+    </style>
+    <style name="Theme.Recall.Splash.WarmDark" parent="Theme.Recall">
+        <item name="android:windowSplashScreenBackground">#1E1814</item>
+    </style>
+    <style name="Theme.Recall.Splash.FreshSystem" parent="Theme.Recall">
+        <item name="android:windowSplashScreenBackground">@color/recall_splash_fresh_system</item>
+    </style>
+    <style name="Theme.Recall.Splash.FreshLight" parent="Theme.Recall">
+        <item name="android:windowSplashScreenBackground">#F1F6F3</item>
+    </style>
+    <style name="Theme.Recall.Splash.FreshDark" parent="Theme.Recall">
+        <item name="android:windowSplashScreenBackground">#111A18</item>
+    </style>
+</resources>
