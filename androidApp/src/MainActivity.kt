@@ -1,5 +1,6 @@
 package com.zerotwodev.recall
 
+import android.Manifest
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
@@ -9,6 +10,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -23,10 +25,23 @@ import com.zerotwodev.recall.ui.theme.isDark
 import com.zerotwodev.recall.ui.theme.windowBackgroundColor
 
 class MainActivity : ComponentActivity() {
+    private val micPermission: AndroidMicPermission
+        get() = (application as RecallApp).container.micPermission as AndroidMicPermission
+
+    private val micPrompt = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        micPermission.onResult(granted)
+    }
+
+    override fun onDestroy() {
+        micPermission.launcher = null
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         val container = (application as RecallApp).container
+        micPermission.launcher = { micPrompt.launch(Manifest.permission.RECORD_AUDIO) }
         setContent {
             val navigator = remember { Navigator() }
             // System back walks the app's own back stack before leaving the app.

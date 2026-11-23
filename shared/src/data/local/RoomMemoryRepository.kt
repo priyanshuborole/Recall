@@ -1,5 +1,7 @@
 package com.zerotwodev.recall.data.local
 
+import androidx.room3.immediateTransaction
+import androidx.room3.useWriterConnection
 import com.zerotwodev.recall.data.monthDayOf
 import com.zerotwodev.recall.data.titleFrom
 import com.zerotwodev.recall.domain.Memory
@@ -7,6 +9,7 @@ import com.zerotwodev.recall.domain.MemoryDraft
 import com.zerotwodev.recall.domain.MemoryRepository
 import com.zerotwodev.recall.domain.MemoryType
 import com.zerotwodev.recall.domain.Mood
+import com.zerotwodev.recall.domain.RecordedAudio
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -19,10 +22,12 @@ import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 class RoomMemoryRepository(
-    private val dao: MemoryDao,
+    private val database: AppDatabase,
     private val clock: Clock,
 ) : MemoryRepository {
 
+    private val dao: MemoryDao = database.memoryDao()
+    private val mediaDao: MediaDao = database.mediaDao()
     private val timeZone: TimeZone get() = TimeZone.currentSystemDefault()
 
     override fun observeRecent(limit: Int): Flow<List<Memory>> =
@@ -45,27 +50,50 @@ class RoomMemoryRepository(
         dao.observeById(id).map { it?.toDomain() }
 
     override suspend fun create(draft: MemoryDraft): String {
+        val memory = newEntity(draft)
+        dao.save(memory)
+        return memory.id
+    }
+
+    override suspend fun createVoice(draft: MemoryDraft, audio: RecordedAudio): String {
+        val memory = newEntity(draft)
+        val media = MediaEntity(
+            id = Uuid.random().toString(),
+            memoryId = memory.id,
+            kind = "AUDIO",
+            fileName = audio.fileName,
+            durationMs = audio.durationMs,
+            createdAt = memory.createdAt,
+            updatedAt = memory.updatedAt,
+            deletedAt = null,
+        )
+        database.useWriterConnection { connection ->
+            connection.immediateTransaction {
+                dao.save(memory)
+                mediaDao.save(media)
+            }
+        }
+        return memory.id
+    }
+
+    private fun newEntity(draft: MemoryDraft): MemoryEntity {
         val now = clock.now()
         val occurredAt = draft.occurredAt ?: now
-        val id = Uuid.random().toString()
-        dao.save(
-            MemoryEntity(
-                id = id,
-                title = draft.title?.takeIf { it.isNotBlank() } ?: titleFrom(draft.body),
-                body = draft.body.trim(),
-                transcript = draft.transcript,
-                mood = draft.mood?.name,
-                type = draft.type.name,
-                occurredAt = occurredAt.toEpochMilliseconds(),
-                monthDay = monthDayOf(occurredAt, timeZone),
-                placeId = null,
-                isHidden = false,
-                createdAt = now.toEpochMilliseconds(),
-                updatedAt = now.toEpochMilliseconds(),
-                deletedAt = null,
-            )
+        return MemoryEntity(
+            id = Uuid.random().toString(),
+            title = draft.title?.takeIf { it.isNotBlank() } ?: titleFrom(draft.body),
+            body = draft.body.trim(),
+            transcript = draft.transcript,
+            mood = draft.mood?.name,
+            type = draft.type.name,
+            occurredAt = occurredAt.toEpochMilliseconds(),
+            monthDay = monthDayOf(occurredAt, timeZone),
+            placeId = null,
+            isHidden = false,
+            createdAt = now.toEpochMilliseconds(),
+            updatedAt = now.toEpochMilliseconds(),
+            deletedAt = null,
         )
-        return id
     }
 
     override suspend fun update(memory: Memory) {

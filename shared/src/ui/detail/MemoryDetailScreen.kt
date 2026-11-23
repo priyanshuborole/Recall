@@ -120,7 +120,7 @@ private fun MemoryContent(memory: Memory) {
         )
         Text(memory.title, style = MaterialTheme.typography.headlineMedium)
         memory.mood?.let { MoodChip(it) }
-        Text(memory.body, style = MaterialTheme.typography.bodyLarge)
+        if (memory.body.isNotBlank()) Text(memory.body, style = MaterialTheme.typography.bodyLarge)
         memory.transcript?.takeIf { it.isNotBlank() && it != memory.body }?.let {
             Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

@@ -26,6 +26,7 @@ import com.zerotwodev.recall.presentation.HomeViewModel
 import com.zerotwodev.recall.presentation.MemoryDetailViewModel
 import com.zerotwodev.recall.presentation.SettingsViewModel
 import com.zerotwodev.recall.presentation.TimelineViewModel
+import com.zerotwodev.recall.presentation.VoiceCaptureViewModel
 import com.zerotwodev.recall.ui.detail.MemoryDetailScreen
 import com.zerotwodev.recall.ui.home.HomeScreen
 import com.zerotwodev.recall.ui.settings.AppearanceScreen
@@ -115,9 +116,17 @@ fun App(
                 when (current) {
                     Screen.Home -> HomeScreen(
                         viewModel = viewModel { HomeViewModel(container.memoryRepository, container.clock) },
+                        voiceViewModel = viewModel {
+                            VoiceCaptureViewModel(container.audioRecorder, container.micPermission, container.memoryRepository)
+                        },
                         onOpenMemory = { navigator.open(Screen.Detail(it)) },
                         onSeeAll = { navigator.switchTab(Screen.Timeline) },
-                        onComingSoon = { message -> scope.launch { snackbar.showSnackbar(message) } },
+                        onMessage = { message ->
+                            scope.launch {
+                                snackbar.currentSnackbarData?.dismiss()
+                                snackbar.showSnackbar(message)
+                            }
+                        },
                     )
                     Screen.Timeline -> TimelineScreen(
                         viewModel = viewModel { TimelineViewModel(container.memoryRepository) },

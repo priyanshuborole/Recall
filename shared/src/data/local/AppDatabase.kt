@@ -23,6 +23,7 @@ import kotlinx.coroutines.*
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun memoryDao(): MemoryDao
+    abstract fun mediaDao(): MediaDao
 
     companion object {
         const val FILE_NAME = "recall.db"

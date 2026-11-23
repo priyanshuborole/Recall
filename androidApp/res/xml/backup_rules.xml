@@ -3,4 +3,5 @@
 <full-backup-content>
     <include domain="database" path="recall.db" />
     <include domain="sharedpref" path="recall_settings.xml" />
+    <include domain="file" path="media/" />
 </full-backup-content>

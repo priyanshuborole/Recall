@@ -2,6 +2,7 @@ package com.zerotwodev.recall.ui.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,11 +28,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zerotwodev.recall.domain.Memory
 import com.zerotwodev.recall.presentation.HomeViewModel
+import com.zerotwodev.recall.presentation.VoiceCaptureViewModel
 import com.zerotwodev.recall.ui.RecallIcons
 import com.zerotwodev.recall.ui.capture.TextCaptureSheet
+import com.zerotwodev.recall.ui.capture.VoiceRecordingPanel
 import com.zerotwodev.recall.ui.components.CaptureBar
 import com.zerotwodev.recall.ui.components.MemoryCard
 import com.zerotwodev.recall.ui.components.MoodChip
@@ -44,51 +50,64 @@ import kotlin.time.Instant
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
+    voiceViewModel: VoiceCaptureViewModel,
     onOpenMemory: (String) -> Unit,
     onSeeAll: () -> Unit,
-    onComingSoon: (String) -> Unit,
+    onMessage: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val voice by voiceViewModel.state.collectAsStateWithLifecycle()
     var showWriteSheet by rememberSaveable { mutableStateOf(false) }
 
+    LaunchedEffect(voiceViewModel) { voiceViewModel.messages.collect { onMessage(it) } }
+    // Leaving the app ends the recording and keeps what was said.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { voiceViewModel.onRelease() }
+
     Column(Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-        ) {
-            Greeting()
-            Spacer(Modifier.height(18.dp))
-            PromptCard()
+        Box(Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 24.dp),
+            ) {
+                Greeting()
+                Spacer(Modifier.height(18.dp))
+                PromptCard()
 
-            state.onThisDay?.let { memory ->
-                Spacer(Modifier.height(12.dp))
-                OnThisDayCard(memory, now = state.now, onClick = { onOpenMemory(memory.id) })
-            }
+                state.onThisDay?.let { memory ->
+                    Spacer(Modifier.height(12.dp))
+                    OnThisDayCard(memory, now = state.now, onClick = { onOpenMemory(memory.id) })
+                }
 
-            Spacer(Modifier.height(20.dp))
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Recent", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                if (state.recent.isNotEmpty()) TextButton(onClick = onSeeAll) { Text("See all") }
+                Spacer(Modifier.height(20.dp))
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Recent", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    if (state.recent.isNotEmpty()) TextButton(onClick = onSeeAll) { Text("See all") }
+                }
+                Spacer(Modifier.height(6.dp))
+                if (!state.isLoading && state.recent.isEmpty()) {
+                    Text(
+                        "Your first memory is one tap away.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    state.recent.forEach { memory -> MemoryCard(memory, onClick = { onOpenMemory(memory.id) }) }
+                }
             }
-            Spacer(Modifier.height(6.dp))
-            if (!state.isLoading && state.recent.isEmpty()) {
-                Text(
-                    "Your first memory is one tap away.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                state.recent.forEach { memory -> MemoryCard(memory, onClick = { onOpenMemory(memory.id) }) }
-            }
+            if (voice.isRecording) VoiceRecordingPanel(voice)
         }
 
         CaptureBar(
             onWrite = { showWriteSheet = true },
-            onVoice = { onComingSoon("Voice capture is next to build") },
-            onPhoto = { onComingSoon("Photo capture is coming soon") },
+            onMicPress = voiceViewModel::onPress,
+            onMicSlide = voiceViewModel::onSlide,
+            onMicRelease = voiceViewModel::onRelease,
+            onPhoto = { onMessage("Photo capture is coming soon") },
+            isRecording = voice.isRecording,
+            willCancel = voice.willCancel,
         )
     }
 

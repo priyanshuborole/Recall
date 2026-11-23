@@ -19,6 +19,9 @@ interface MemoryRepository {
 
     /** Saves a new memory and returns its id. */
     suspend fun create(draft: MemoryDraft): String
+
+    /** Saves a voice memory and its audio record together, or neither. */
+    suspend fun createVoice(draft: MemoryDraft, audio: RecordedAudio): String
     suspend fun update(memory: Memory)
     suspend fun setHidden(id: String, hidden: Boolean)
 

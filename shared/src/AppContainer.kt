@@ -1,6 +1,8 @@
 package com.zerotwodev.recall
 
+import com.zerotwodev.recall.domain.AudioRecorder
 import com.zerotwodev.recall.domain.MemoryRepository
+import com.zerotwodev.recall.domain.MicPermission
 import com.zerotwodev.recall.domain.SettingsRepository
 import kotlin.time.Clock
 
@@ -12,5 +14,7 @@ import kotlin.time.Clock
 class AppContainer(
     val memoryRepository: MemoryRepository,
     val settingsRepository: SettingsRepository,
+    val audioRecorder: AudioRecorder,
+    val micPermission: MicPermission,
     val clock: Clock = Clock.System,
 )
