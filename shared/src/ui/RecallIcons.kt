@@ -37,6 +37,10 @@ object RecallIcons {
     )
     val Search = icon("Search", "M5 11a6 6 0 1 0 12 0a6 6 0 1 0-12 0", "M20 20l-4.5-4.5")
     val Back = icon("Back", "M19 12H5", "M11 6l-6 6 6 6")
+    val Close = icon("Close", "M6 6l12 12M18 6L6 18")
+    val Check = icon("Check", "M5 12l5 5 9-10", strokeWidth = 2.2f)
+    val Plus = icon("Plus", "M12 5v14M5 12h14")
+    val Pin = icon("Pin", "M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z", "M9.5 9a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0")
     val More = icon("More", "M12 5.5v.01M12 12v.01M12 18.5v.01", strokeWidth = 2.6f)
 
     private fun icon(name: String, vararg paths: String, strokeWidth: Float = 1.8f): ImageVector {

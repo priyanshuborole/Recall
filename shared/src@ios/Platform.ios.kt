@@ -1,5 +1,6 @@
 package com.zerotwodev.recall
 
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.room3.Room
 import com.zerotwodev.recall.data.KeyValueStore
 import com.zerotwodev.recall.data.SettingsRepositoryImpl
@@ -11,6 +12,7 @@ import com.zerotwodev.recall.domain.MicPermission
 import com.zerotwodev.recall.domain.PhotoPickResult
 import com.zerotwodev.recall.domain.PhotoPicker
 import com.zerotwodev.recall.domain.RecordedAudio
+import com.zerotwodev.recall.ui.ImageStore
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
@@ -30,6 +32,7 @@ fun createAppContainer(): AppContainer {
         audioRecorder = UnavailableAudioRecorder,
         micPermission = UnavailableMicPermission,
         photoPicker = UnavailablePhotoPicker,
+        imageStore = UnavailableImageStore,
         clock = clock,
     )
 }
@@ -37,6 +40,10 @@ fun createAppContainer(): AppContainer {
 private object UnavailablePhotoPicker : PhotoPicker {
     override suspend fun pick(): PhotoPickResult = PhotoPickResult.Failed
     override suspend fun delete(fileName: String) = Unit
+}
+
+private object UnavailableImageStore : ImageStore {
+    override suspend fun load(fileName: String, maxSidePx: Int): ImageBitmap? = null
 }
 
 // Android comes first. AVAudioRecorder goes here when iOS work resumes.

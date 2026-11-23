@@ -26,6 +26,7 @@ fun createAppContainer(context: Context): AppContainer {
         audioRecorder = AndroidAudioRecorder(appContext),
         micPermission = AndroidMicPermission(appContext),
         photoPicker = AndroidPhotoPicker(appContext),
+        imageStore = AndroidImageStore(appContext),
         clock = clock,
     )
 }

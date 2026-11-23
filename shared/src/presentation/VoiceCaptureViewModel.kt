@@ -48,6 +48,11 @@ class VoiceCaptureViewModel(
     private val _messages = Channel<String>(Channel.BUFFERED)
     val messages: Flow<String> = _messages.receiveAsFlow()
 
+    private val _savedMemories = Channel<String>(Channel.BUFFERED)
+
+    /** Ids of voice memories just saved, so Home can open their review. */
+    val savedMemories: Flow<String> = _savedMemories.receiveAsFlow()
+
     private var held = false
     private var session: Job? = null
 
@@ -125,8 +130,9 @@ class VoiceCaptureViewModel(
 
     private suspend fun save(audio: RecordedAudio, reachedLimit: Boolean) {
         try {
-            repository.createVoice(MemoryDraft(body = "", type = MemoryType.VOICE, title = "Voice note"), audio)
-            _messages.trySend(if (reachedLimit) "Saved your voice note at the 1 minute limit." else "Voice note saved.")
+            val id = repository.createVoice(MemoryDraft(body = "", type = MemoryType.VOICE, title = "Voice note"), audio)
+            if (reachedLimit) _messages.trySend("Saved your voice note at the 1 minute limit.")
+            _savedMemories.trySend(id)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {

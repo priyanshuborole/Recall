@@ -22,11 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zerotwodev.recall.AppContainer
+import com.zerotwodev.recall.presentation.CaptureReviewViewModel
 import com.zerotwodev.recall.presentation.HomeViewModel
 import com.zerotwodev.recall.presentation.MemoryDetailViewModel
 import com.zerotwodev.recall.presentation.SettingsViewModel
 import com.zerotwodev.recall.presentation.TimelineViewModel
 import com.zerotwodev.recall.presentation.VoiceCaptureViewModel
+import com.zerotwodev.recall.ui.capture.CaptureReviewScreen
 import com.zerotwodev.recall.ui.detail.MemoryDetailScreen
 import com.zerotwodev.recall.ui.home.HomeScreen
 import com.zerotwodev.recall.ui.settings.AppearanceScreen
@@ -42,6 +44,7 @@ sealed interface Screen {
     data object Settings : Screen
     data object Appearance : Screen
     data class Detail(val memoryId: String) : Screen
+    data class CaptureReview(val memoryId: String) : Screen
 }
 
 /**
@@ -93,6 +96,12 @@ fun App(
         val scope = rememberCoroutineScope()
         val current = navigator.current
         val isTab = current == Screen.Home || current == Screen.Timeline || current == Screen.Settings
+        val showMessage: (String) -> Unit = { message ->
+            scope.launch {
+                snackbar.currentSnackbarData?.dismiss()
+                snackbar.showSnackbar(message)
+            }
+        }
 
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
@@ -121,12 +130,16 @@ fun App(
                         },
                         onOpenMemory = { navigator.open(Screen.Detail(it)) },
                         onSeeAll = { navigator.switchTab(Screen.Timeline) },
-                        onMessage = { message ->
-                            scope.launch {
-                                snackbar.currentSnackbarData?.dismiss()
-                                snackbar.showSnackbar(message)
-                            }
+                        onReview = { navigator.open(Screen.CaptureReview(it)) },
+                        onMessage = showMessage,
+                    )
+                    is Screen.CaptureReview -> CaptureReviewScreen(
+                        viewModel = viewModel(key = "review-${current.memoryId}") {
+                            CaptureReviewViewModel(current.memoryId, container.memoryRepository, container.photoPicker)
                         },
+                        imageStore = container.imageStore,
+                        onClose = { navigator.back() },
+                        onMessage = showMessage,
                     )
                     Screen.Timeline -> TimelineScreen(
                         viewModel = viewModel { TimelineViewModel(container.memoryRepository) },
@@ -145,6 +158,7 @@ fun App(
                         viewModel = viewModel(key = "detail-${current.memoryId}") {
                             MemoryDetailViewModel(current.memoryId, container.memoryRepository)
                         },
+                        imageStore = container.imageStore,
                         onBack = { navigator.back() },
                     )
                 }

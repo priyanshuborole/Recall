@@ -39,6 +39,10 @@ class HomeViewModel(
 
     private val _messages = Channel<String>(Channel.BUFFERED)
     val messages: Flow<String> = _messages.receiveAsFlow()
+    private val _savedMemories = Channel<String>(Channel.BUFFERED)
+
+    /** Ids of photo memories just saved, so Home can open their review. */
+    val savedMemories: Flow<String> = _savedMemories.receiveAsFlow()
     private var photoJob: Job? = null
 
     val uiState: StateFlow<HomeUiState> = combine(
@@ -66,20 +70,21 @@ class HomeViewModel(
             when (val result = photoPicker.pick()) {
                 PhotoPickResult.Cancelled -> Unit
                 PhotoPickResult.Failed -> _messages.send("That photo couldn't be added. Please try another.")
-                is PhotoPickResult.Saved -> withContext(NonCancellable) { savePhoto(result.fileName) }
+                is PhotoPickResult.Saved -> withContext(NonCancellable) { savePhotos(result.fileNames) }
             }
         }
     }
 
-    private suspend fun savePhoto(fileName: String) {
+    private suspend fun savePhotos(fileNames: List<String>) {
         try {
-            repository.createPhoto(MemoryDraft(body = "", type = MemoryType.PHOTO, title = "Photo"), fileName)
-            _messages.trySend("Photo saved.")
+            val title = if (fileNames.size == 1) "Photo" else "${fileNames.size} photos"
+            val id = repository.createPhotos(MemoryDraft(body = "", type = MemoryType.PHOTO, title = title), fileNames)
+            _savedMemories.trySend(id)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            photoPicker.delete(fileName)
-            _messages.trySend("That photo couldn't be added. Please try another.")
+            fileNames.forEach { photoPicker.delete(it) }
+            _messages.trySend("Those photos couldn't be added. Please try again.")
         }
     }
 }

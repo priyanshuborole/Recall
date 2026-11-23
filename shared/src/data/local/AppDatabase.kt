@@ -24,6 +24,9 @@ import kotlinx.coroutines.*
 abstract class AppDatabase : RoomDatabase() {
     abstract fun memoryDao(): MemoryDao
     abstract fun mediaDao(): MediaDao
+    abstract fun personDao(): PersonDao
+    abstract fun memoryPersonDao(): MemoryPersonDao
+    abstract fun placeDao(): PlaceDao
 
     companion object {
         const val FILE_NAME = "recall.db"

@@ -26,6 +26,26 @@ data class MemoryDraft(
     val occurredAt: Instant? = null,
 )
 
+data class Person(val id: String, val name: String)
+
+data class Place(val id: String, val name: String)
+
+enum class MediaKind { AUDIO, PHOTO }
+
+/** A file in the app's media folder, referenced by name. */
+data class MediaItem(val id: String, val kind: MediaKind, val fileName: String, val durationMs: Long?)
+
+/** A memory with everything attached to it. */
+data class MemoryDetails(
+    val memory: Memory,
+    val media: List<MediaItem>,
+    val people: List<Person>,
+    val place: Place?,
+) {
+    val audio: MediaItem? get() = media.firstOrNull { it.kind == MediaKind.AUDIO }
+    val photos: List<MediaItem> get() = media.filter { it.kind == MediaKind.PHOTO }
+}
+
 enum class MemoryType { TEXT, VOICE, PHOTO }
 
 enum class Mood(val label: String) {

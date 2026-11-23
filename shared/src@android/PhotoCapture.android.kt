@@ -8,8 +8,12 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import com.zerotwodev.recall.domain.MAX_PHOTOS_AT_ONCE
 import com.zerotwodev.recall.domain.PhotoPickResult
 import com.zerotwodev.recall.domain.PhotoPicker
+import com.zerotwodev.recall.ui.ImageStore
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -20,23 +24,45 @@ import kotlin.uuid.Uuid
 private const val MAX_SIDE = 2048
 private const val JPEG_QUALITY = 85
 
+internal class AndroidImageStore(context: Context) : ImageStore {
+    private val mediaDir = File(context.filesDir, "media")
+
+    override suspend fun load(fileName: String, maxSidePx: Int): ImageBitmap? = withContext(Dispatchers.IO) {
+        try {
+            val path = File(mediaDir, File(fileName).name).absolutePath
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(path, bounds)
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@withContext null
+            var sample = 1
+            while (max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxSidePx) sample *= 2
+            BitmapFactory.decodeFile(path, BitmapFactory.Options().apply { inSampleSize = sample })?.asImageBitmap()
+        } catch (_: Exception) {
+            null
+        } catch (_: OutOfMemoryError) {
+            null
+        }
+    }
+}
+
 /** The activity connects the system photo picker here, because only an activity can open it. */
 class AndroidPhotoPicker(private val context: Context) : PhotoPicker {
     var launcher: (() -> Unit)? = null
-    private var pending: CompletableDeferred<Uri?>? = null
+    private var pending: CompletableDeferred<List<Uri>>? = null
     private val mediaDir = File(context.filesDir, "media")
 
     override suspend fun pick(): PhotoPickResult {
         val launch = launcher ?: return PhotoPickResult.Failed
-        val result = CompletableDeferred<Uri?>()
+        val result = CompletableDeferred<List<Uri>>()
         pending = result
         launch()
-        val uri = result.await() ?: return PhotoPickResult.Cancelled
-        return withContext(Dispatchers.IO) { save(uri) }
+        val uris = result.await().take(MAX_PHOTOS_AT_ONCE)
+        if (uris.isEmpty()) return PhotoPickResult.Cancelled
+        val saved = withContext(Dispatchers.IO) { uris.mapNotNull { save(it) } }
+        return if (saved.isEmpty()) PhotoPickResult.Failed else PhotoPickResult.Saved(saved)
     }
 
-    fun onResult(uri: Uri?) {
-        pending?.complete(uri)
+    fun onResult(uris: List<Uri>) {
+        pending?.complete(uris)
         pending = null
     }
 
@@ -44,19 +70,19 @@ class AndroidPhotoPicker(private val context: Context) : PhotoPicker {
         withContext(Dispatchers.IO) { File(mediaDir, File(fileName).name).delete() }
     }
 
-    private fun save(uri: Uri): PhotoPickResult {
+    private fun save(uri: Uri): String? {
         val name = "${Uuid.random()}.jpg"
         val temp = File(mediaDir, "$name.tmp")
         return try {
             mediaDir.mkdirs()
-            val bitmap = decode(uri) ?: return PhotoPickResult.Failed
+            val bitmap = decode(uri) ?: return null
             val written = temp.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, it) }
             bitmap.recycle()
-            if (written && temp.renameTo(File(mediaDir, name))) PhotoPickResult.Saved(name) else PhotoPickResult.Failed
+            if (written && temp.renameTo(File(mediaDir, name))) name else null
         } catch (_: Exception) {
-            PhotoPickResult.Failed
+            null
         } catch (_: OutOfMemoryError) {
-            PhotoPickResult.Failed
+            null
         } finally {
             temp.delete()
         }

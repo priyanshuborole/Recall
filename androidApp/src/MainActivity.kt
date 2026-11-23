@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.toArgb
 import com.zerotwodev.recall.domain.AppTheme
+import com.zerotwodev.recall.domain.MAX_PHOTOS_AT_ONCE
 import com.zerotwodev.recall.domain.ThemeMode
 import com.zerotwodev.recall.ui.App
 import com.zerotwodev.recall.ui.Navigator
@@ -36,9 +37,9 @@ class MainActivity : ComponentActivity() {
     private val photoPicker: AndroidPhotoPicker
         get() = (application as RecallApp).container.photoPicker as AndroidPhotoPicker
 
-    private val photoPrompt = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        photoPicker.onResult(uri)
-    }
+    private val photoPrompt = registerForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(MAX_PHOTOS_AT_ONCE),
+    ) { uris -> photoPicker.onResult(uris) }
 
     override fun onDestroy() {
         micPermission.launcher = null

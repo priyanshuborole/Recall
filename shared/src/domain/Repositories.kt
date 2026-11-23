@@ -23,8 +23,26 @@ interface MemoryRepository {
     /** Saves a voice memory and its audio record together, or neither. */
     suspend fun createVoice(draft: MemoryDraft, audio: RecordedAudio): String
 
-    /** Saves a photo memory and its media record together, or neither. */
-    suspend fun createPhoto(draft: MemoryDraft, fileName: String): String
+    /** Saves a photo memory and all its media records together, or none of them. */
+    suspend fun createPhotos(draft: MemoryDraft, fileNames: List<String>): String
+
+    fun observeDetails(id: String): Flow<MemoryDetails?>
+
+    /** Everyone added so far, for suggestions. */
+    fun observePeople(): Flow<List<Person>>
+
+    suspend fun setTitle(id: String, title: String)
+    suspend fun setMood(id: String, mood: Mood?)
+    suspend fun addPhotos(id: String, fileNames: List<String>)
+
+    /** Reuses an existing person with the same name, ignoring case. */
+    suspend fun addPerson(id: String, name: String)
+
+    /** Removes the person from this memory only. */
+    suspend fun removePerson(id: String, personId: String)
+
+    /** One place per memory. Null clears it. */
+    suspend fun setPlace(id: String, name: String?)
     suspend fun update(memory: Memory)
     suspend fun setHidden(id: String, hidden: Boolean)
 

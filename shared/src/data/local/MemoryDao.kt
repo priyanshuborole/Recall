@@ -46,6 +46,18 @@ interface MemoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun save(memory: MemoryEntity)
 
+    @Query("UPDATE memory SET title = :title, updatedAt = :now WHERE id = :id")
+    suspend fun setTitle(id: String, title: String, now: Long)
+
+    @Query("UPDATE memory SET mood = :mood, updatedAt = :now WHERE id = :id")
+    suspend fun setMood(id: String, mood: String?, now: Long)
+
+    @Query("UPDATE memory SET placeId = :placeId, updatedAt = :now WHERE id = :id")
+    suspend fun setPlace(id: String, placeId: String?, now: Long)
+
+    @Query("UPDATE memory SET updatedAt = :now WHERE id = :id")
+    suspend fun touch(id: String, now: Long)
+
     @Query("UPDATE memory SET isHidden = :hidden, updatedAt = :now WHERE id = :id")
     suspend fun setHidden(id: String, hidden: Boolean, now: Long)
 
