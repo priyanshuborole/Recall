@@ -19,10 +19,12 @@ fun createAppContainer(context: Context): AppContainer {
     )
     val clock = Clock.System
     return AppContainer(
-        memoryRepository = RoomMemoryRepository(database.memoryDao(), clock),
+        memoryRepository = RoomMemoryRepository(database, clock),
         settingsRepository = SettingsRepositoryImpl(
             SharedPreferencesStore(appContext.getSharedPreferences("recall_settings", Context.MODE_PRIVATE))
         ),
+        audioRecorder = AndroidAudioRecorder(appContext),
+        micPermission = AndroidMicPermission(appContext),
         clock = clock,
     )
 }

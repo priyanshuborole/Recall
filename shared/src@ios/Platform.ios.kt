@@ -6,6 +6,9 @@ import com.zerotwodev.recall.data.SettingsRepositoryImpl
 import com.zerotwodev.recall.data.local.AppDatabase
 import com.zerotwodev.recall.data.local.RoomMemoryRepository
 import com.zerotwodev.recall.data.local.buildDatabase
+import com.zerotwodev.recall.domain.AudioRecorder
+import com.zerotwodev.recall.domain.MicPermission
+import com.zerotwodev.recall.domain.RecordedAudio
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
@@ -20,10 +23,26 @@ fun createAppContainer(): AppContainer {
     )
     val clock = Clock.System
     return AppContainer(
-        memoryRepository = RoomMemoryRepository(database.memoryDao(), clock),
+        memoryRepository = RoomMemoryRepository(database, clock),
         settingsRepository = SettingsRepositoryImpl(UserDefaultsStore(NSUserDefaults.standardUserDefaults)),
+        audioRecorder = UnavailableAudioRecorder,
+        micPermission = UnavailableMicPermission,
         clock = clock,
     )
+}
+
+// Android comes first. AVAudioRecorder goes here when iOS work resumes.
+private object UnavailableAudioRecorder : AudioRecorder {
+    override suspend fun start() = false
+    override fun level() = 0f
+    override suspend fun stop(): RecordedAudio? = null
+    override suspend fun cancel() = Unit
+    override suspend fun delete(fileName: String) = Unit
+}
+
+private object UnavailableMicPermission : MicPermission {
+    override fun isGranted() = true
+    override suspend fun request() = true
 }
 
 @OptIn(ExperimentalForeignApi::class)
