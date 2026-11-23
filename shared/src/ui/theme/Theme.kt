@@ -11,14 +11,21 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zerotwodev.recall.domain.AppTheme
 import com.zerotwodev.recall.domain.ThemeMode
+import com.zerotwodev.recall.resources.Res
+import com.zerotwodev.recall.resources.dm_sans
+import com.zerotwodev.recall.resources.fraunces
+import org.jetbrains.compose.resources.Font
 
 /** Maps a design palette onto Material 3 roles, so every M3 component picks up the theme. */
 private fun Palette.toColorScheme(dark: Boolean): ColorScheme {
@@ -47,23 +54,53 @@ private fun Palette.toColorScheme(dark: Boolean): ColorScheme {
     )
 }
 
-// The design uses Fraunces (titles) and DM Sans (UI). To use them, put the .ttf files in
-// shared/composeResources/font/ and build FontFamily(Font(Res.font.fraunces_medium, FontWeight.Medium), ...)
-private val Serif: FontFamily = FontFamily.Serif
-private val Sans: FontFamily = FontFamily.SansSerif
-
-private val RecallTypography = Typography(
-    headlineMedium = TextStyle(fontFamily = Serif, fontWeight = FontWeight.Medium, fontSize = 26.sp, lineHeight = 31.sp),
-    titleLarge = TextStyle(fontFamily = Serif, fontWeight = FontWeight.Normal, fontSize = 19.sp, lineHeight = 25.sp),
-    titleMedium = TextStyle(fontFamily = Serif, fontWeight = FontWeight.Medium, fontSize = 18.sp, lineHeight = 23.sp),
-    titleSmall = TextStyle(fontFamily = Serif, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 21.sp),
-    bodyLarge = TextStyle(fontFamily = Sans, fontSize = 16.sp, lineHeight = 24.sp),
-    bodyMedium = TextStyle(fontFamily = Sans, fontSize = 14.sp, lineHeight = 20.sp),
-    bodySmall = TextStyle(fontFamily = Sans, fontSize = 13.sp, lineHeight = 18.sp),
-    labelLarge = TextStyle(fontFamily = Sans, fontWeight = FontWeight.Medium, fontSize = 14.sp),
-    labelMedium = TextStyle(fontFamily = Sans, fontWeight = FontWeight.Medium, fontSize = 12.sp),
-    labelSmall = TextStyle(fontFamily = Sans, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, letterSpacing = 1.sp),
+// Both fonts are variable. Every axis is set explicitly because Fraunces' file defaults
+// to Black weight with the "wonky" letterforms on, which is not the design.
+@Composable
+private fun frauncesFont(weight: FontWeight): Font = Font(
+    resource = Res.font.fraunces,
+    weight = weight,
+    variationSettings = FontVariation.Settings(
+        FontVariation.Setting("wght", weight.weight.toFloat()),
+        FontVariation.Setting("opsz", 24f),
+        FontVariation.Setting("SOFT", 0f),
+        FontVariation.Setting("WONK", 0f),
+    ),
 )
+
+@Composable
+private fun dmSansFont(weight: FontWeight): Font = Font(
+    resource = Res.font.dm_sans,
+    weight = weight,
+    variationSettings = FontVariation.Settings(
+        FontVariation.Setting("wght", weight.weight.toFloat()),
+        FontVariation.Setting("opsz", 14f),
+    ),
+)
+
+@Composable
+private fun recallTypography(): Typography {
+    val serif = FontFamily(frauncesFont(FontWeight.Normal), frauncesFont(FontWeight.Medium))
+    val sans = FontFamily(
+        dmSansFont(FontWeight.Normal),
+        dmSansFont(FontWeight.Medium),
+        dmSansFont(FontWeight.SemiBold),
+    )
+    return remember(serif, sans) {
+        Typography(
+            headlineMedium = TextStyle(fontFamily = serif, fontWeight = FontWeight.Medium, fontSize = 26.sp, lineHeight = 31.sp),
+            titleLarge = TextStyle(fontFamily = serif, fontWeight = FontWeight.Normal, fontSize = 19.sp, lineHeight = 25.sp),
+            titleMedium = TextStyle(fontFamily = serif, fontWeight = FontWeight.Medium, fontSize = 18.sp, lineHeight = 23.sp),
+            titleSmall = TextStyle(fontFamily = serif, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 21.sp),
+            bodyLarge = TextStyle(fontFamily = sans, fontSize = 16.sp, lineHeight = 24.sp),
+            bodyMedium = TextStyle(fontFamily = sans, fontSize = 14.sp, lineHeight = 20.sp),
+            bodySmall = TextStyle(fontFamily = sans, fontSize = 13.sp, lineHeight = 18.sp),
+            labelLarge = TextStyle(fontFamily = sans, fontWeight = FontWeight.Medium, fontSize = 14.sp),
+            labelMedium = TextStyle(fontFamily = sans, fontWeight = FontWeight.Medium, fontSize = 12.sp),
+            labelSmall = TextStyle(fontFamily = sans, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, letterSpacing = 1.sp),
+        )
+    }
+}
 
 private val RecallShapes = Shapes(
     small = RoundedCornerShape(12.dp),
@@ -95,7 +132,7 @@ fun RecallTheme(
     CompositionLocalProvider(LocalIsDark provides darkTheme) {
         MaterialTheme(
             colorScheme = Palettes.of(theme, darkTheme).toColorScheme(darkTheme),
-            typography = RecallTypography,
+            typography = recallTypography(),
             shapes = RecallShapes,
             content = content,
         )
