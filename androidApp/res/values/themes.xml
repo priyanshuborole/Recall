@@ -1,0 +1,7 @@
+<resources>
+    <!-- Window colour shown before Compose draws, so launch doesn't flash white. -->
+    <style name="Theme.Recall" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/recall_background</item>
+    </style>
+    <color name="recall_background">#F6EFE4</color>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup (Android 11 and below). Keeps the memory database and settings. -->
+<full-backup-content>
+    <include domain="database" path="recall.db" />
+    <include domain="sharedpref" path="recall_settings.xml" />
+</full-backup-content>

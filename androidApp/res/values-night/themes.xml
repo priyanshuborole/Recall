@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.Recall" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/recall_background</item>
+    </style>
+    <color name="recall_background">#1E1814</color>
+</resources>

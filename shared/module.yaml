@@ -1,0 +1,58 @@
+product:
+  type: kmp/lib
+  platforms: [android, iosArm64, iosSimulatorArm64]
+
+dependencies:
+  - $compose.runtime
+  - $compose.foundation
+  - $compose.material3
+  - $compose.ui
+  - $compose.components.resources
+  - $libs.androidx.lifecycle.viewmodel.compose
+  - $libs.androidx.lifecycle.runtime.compose
+  - $libs.kotlinx.coroutines.core
+  - $libs.kotlinx.datetime
+  - $libs.androidx.room3.runtime
+  - $libs.androidx.sqlite.bundled
+
+dependencies@android:
+  - $compose.preview
+  - $compose.uiTooling
+
+settings:
+  kotlin:
+    freeCompilerArgs:
+      - -Xexpect-actual-classes
+    optIns:
+      - kotlin.time.ExperimentalTime
+      - kotlin.uuid.ExperimentalUuidApi
+      - kotlinx.coroutines.ExperimentalCoroutinesApi
+      - kotlinx.coroutines.FlowPreview
+      - androidx.compose.material3.ExperimentalMaterial3Api
+      - androidx.compose.foundation.ExperimentalFoundationApi
+      - androidx.compose.foundation.layout.ExperimentalLayoutApi
+    ksp:
+      processors:
+        - $libs.androidx.room3.compiler
+  compose:
+    enabled: true
+    resources:
+      packageName: com.zerotwodev.recall.resources
+      exposedAccessors: true
+
+# Room writes one schema per platform (KSP runs per platform). Commit these folders.
+settings@android:
+  kotlin:
+    ksp:
+      processorOptions:
+        room.schemaLocation: ./schemas/android
+settings@iosArm64:
+  kotlin:
+    ksp:
+      processorOptions:
+        room.schemaLocation: ./schemas/iosArm64
+settings@iosSimulatorArm64:
+  kotlin:
+    ksp:
+      processorOptions:
+        room.schemaLocation: ./schemas/iosSimulatorArm64
