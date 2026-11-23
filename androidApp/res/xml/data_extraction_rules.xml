@@ -4,11 +4,9 @@
     <cloud-backup>
         <include domain="database" path="recall.db" />
         <include domain="sharedpref" path="recall_settings.xml" />
-        <include domain="file" path="media/" />
     </cloud-backup>
     <device-transfer>
         <include domain="database" path="recall.db" />
         <include domain="sharedpref" path="recall_settings.xml" />
-        <include domain="file" path="media/" />
     </device-transfer>
 </data-extraction-rules>

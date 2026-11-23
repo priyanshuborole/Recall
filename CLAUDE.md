@@ -17,6 +17,10 @@ recall it years later (Timeline, On this day). Built for the owner first, Play S
   The toolchain reads `androidApp/google-services.json` itself; iOS adds Firebase as a Swift package.
 - **Voice capture:** hold to record, release to save, slide left to cancel (design board 4).
   Recordings are AAC `.m4a`, mono, 64 kbps, max 60 s.
+- **Voice is text-only (decided 2026-11-23):** keep a clip only until its transcript is saved, then delete
+  it. A failed or offline transcription keeps the clip for retry. No voice playback.
+- **Backup:** Android Auto Backup covers the database and settings only. Never add `media/`: the 25 MB app
+  limit could stop the database backing up too. Photos need their own backup plan later.
 
 ## Layout
 
@@ -70,7 +74,7 @@ Settings (reminder time and app lock are saved but do nothing yet); Appearance s
 4. Android window theme and iOS status bar follow the chosen theme and mode
 5. `AudioRecorder` + `MicPermission` per platform (MediaRecorder / AVAudioRecorder)
 6. Hold-to-record overlay on Home with timer, 34-bar waveform, slide-left cancel
-7. `MediaDao`; save voice memory + AUDIO media row in one transaction; back up `media/` on Android
+7. `MediaDao`; save voice memory + AUDIO media row in one transaction
 8. Photo picker (FileKit, else platform pickers); copy as `<uuid>.jpg`, max 2048 px, 85% JPEG
 9. Capture review screen (board 5): editable title, transcript, Mood/People/Place chips, photos, Done
 10. People and places DAOs; reuse a person by name (case-insensitive); one place per memory
