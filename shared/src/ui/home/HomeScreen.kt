@@ -60,6 +60,7 @@ fun HomeScreen(
     var showWriteSheet by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(voiceViewModel) { voiceViewModel.messages.collect { onMessage(it) } }
+    LaunchedEffect(viewModel) { viewModel.messages.collect { onMessage(it) } }
     // Leaving the app ends the recording and keeps what was said.
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { voiceViewModel.onRelease() }
 
@@ -105,7 +106,7 @@ fun HomeScreen(
             onMicPress = voiceViewModel::onPress,
             onMicSlide = voiceViewModel::onSlide,
             onMicRelease = voiceViewModel::onRelease,
-            onPhoto = { onMessage("Photo capture is coming soon") },
+            onPhoto = viewModel::addPhoto,
             isRecording = voice.isRecording,
             willCancel = voice.willCancel,
         )

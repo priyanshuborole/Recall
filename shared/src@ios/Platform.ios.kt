@@ -8,6 +8,8 @@ import com.zerotwodev.recall.data.local.RoomMemoryRepository
 import com.zerotwodev.recall.data.local.buildDatabase
 import com.zerotwodev.recall.domain.AudioRecorder
 import com.zerotwodev.recall.domain.MicPermission
+import com.zerotwodev.recall.domain.PhotoPickResult
+import com.zerotwodev.recall.domain.PhotoPicker
 import com.zerotwodev.recall.domain.RecordedAudio
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSDocumentDirectory
@@ -27,8 +29,14 @@ fun createAppContainer(): AppContainer {
         settingsRepository = SettingsRepositoryImpl(UserDefaultsStore(NSUserDefaults.standardUserDefaults)),
         audioRecorder = UnavailableAudioRecorder,
         micPermission = UnavailableMicPermission,
+        photoPicker = UnavailablePhotoPicker,
         clock = clock,
     )
+}
+
+private object UnavailablePhotoPicker : PhotoPicker {
+    override suspend fun pick(): PhotoPickResult = PhotoPickResult.Failed
+    override suspend fun delete(fileName: String) = Unit
 }
 
 // Android comes first. AVAudioRecorder goes here when iOS work resumes.

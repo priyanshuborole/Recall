@@ -22,6 +22,9 @@ interface MemoryRepository {
 
     /** Saves a voice memory and its audio record together, or neither. */
     suspend fun createVoice(draft: MemoryDraft, audio: RecordedAudio): String
+
+    /** Saves a photo memory and its media record together, or neither. */
+    suspend fun createPhoto(draft: MemoryDraft, fileName: String): String
     suspend fun update(memory: Memory)
     suspend fun setHidden(id: String, hidden: Boolean)
 

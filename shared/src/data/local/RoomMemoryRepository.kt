@@ -55,14 +55,20 @@ class RoomMemoryRepository(
         return memory.id
     }
 
-    override suspend fun createVoice(draft: MemoryDraft, audio: RecordedAudio): String {
+    override suspend fun createVoice(draft: MemoryDraft, audio: RecordedAudio): String =
+        createWithMedia(draft, kind = "AUDIO", fileName = audio.fileName, durationMs = audio.durationMs)
+
+    override suspend fun createPhoto(draft: MemoryDraft, fileName: String): String =
+        createWithMedia(draft, kind = "PHOTO", fileName = fileName, durationMs = null)
+
+    private suspend fun createWithMedia(draft: MemoryDraft, kind: String, fileName: String, durationMs: Long?): String {
         val memory = newEntity(draft)
         val media = MediaEntity(
             id = Uuid.random().toString(),
             memoryId = memory.id,
-            kind = "AUDIO",
-            fileName = audio.fileName,
-            durationMs = audio.durationMs,
+            kind = kind,
+            fileName = fileName,
+            durationMs = durationMs,
             createdAt = memory.createdAt,
             updatedAt = memory.updatedAt,
             deletedAt = null,

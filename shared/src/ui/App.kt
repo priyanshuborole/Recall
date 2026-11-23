@@ -115,7 +115,7 @@ fun App(
             Box(Modifier.fillMaxSize().padding(padding)) {
                 when (current) {
                     Screen.Home -> HomeScreen(
-                        viewModel = viewModel { HomeViewModel(container.memoryRepository, container.clock) },
+                        viewModel = viewModel { HomeViewModel(container.memoryRepository, container.photoPicker, container.clock) },
                         voiceViewModel = viewModel {
                             VoiceCaptureViewModel(container.audioRecorder, container.micPermission, container.memoryRepository)
                         },

@@ -10,6 +10,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -32,8 +33,16 @@ class MainActivity : ComponentActivity() {
         micPermission.onResult(granted)
     }
 
+    private val photoPicker: AndroidPhotoPicker
+        get() = (application as RecallApp).container.photoPicker as AndroidPhotoPicker
+
+    private val photoPrompt = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        photoPicker.onResult(uri)
+    }
+
     override fun onDestroy() {
         micPermission.launcher = null
+        photoPicker.launcher = null
         super.onDestroy()
     }
 
@@ -42,6 +51,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val container = (application as RecallApp).container
         micPermission.launcher = { micPrompt.launch(Manifest.permission.RECORD_AUDIO) }
+        photoPicker.launcher = {
+            photoPrompt.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        }
         setContent {
             val navigator = remember { Navigator() }
             // System back walks the app's own back stack before leaving the app.
