@@ -11,6 +11,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 
 /** Loads saved photos from the app's media folder. */
@@ -20,9 +21,15 @@ interface ImageStore {
 }
 
 @Composable
-fun PhotoThumbnail(fileName: String, imageStore: ImageStore, modifier: Modifier = Modifier) {
-    val bitmap by produceState<ImageBitmap?>(null, fileName) { value = imageStore.load(fileName, 320) }
-    Box(modifier.clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.surfaceVariant)) {
+fun PhotoThumbnail(
+    fileName: String,
+    imageStore: ImageStore,
+    modifier: Modifier = Modifier,
+    maxSidePx: Int = 320,
+    shape: Shape = MaterialTheme.shapes.small,
+) {
+    val bitmap by produceState<ImageBitmap?>(null, fileName, maxSidePx) { value = imageStore.load(fileName, maxSidePx) }
+    Box(modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceVariant)) {
         bitmap?.let {
             Image(it, contentDescription = "Photo", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         }

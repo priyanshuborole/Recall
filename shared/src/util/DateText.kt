@@ -37,6 +37,16 @@ fun Instant.toLongDay(timeZone: TimeZone = TimeZone.currentSystemDefault()): Str
     return "${weekdays[date.dayOfWeek.ordinal]}, ${dayOf(date)} ${longMonths[monthIndex(date)]}"
 }
 
+/** "Sunday, 25 October 2026 · 8:40 PM" */
+fun Instant.toFullDateTime(timeZone: TimeZone = TimeZone.currentSystemDefault()): String {
+    val local = toLocalDateTime(timeZone)
+    val date = local.date
+    val hour12 = (local.hour % 12).let { if (it == 0) 12 else it }
+    val suffix = if (local.hour < 12) "AM" else "PM"
+    val minute = local.minute.toString().padStart(2, '0')
+    return "${weekdays[date.dayOfWeek.ordinal]}, ${dayOf(date)} ${longMonths[monthIndex(date)]} ${date.year} · $hour12:$minute $suffix"
+}
+
 /** "Good morning" / "Good afternoon" / "Good evening" */
 fun greetingFor(now: Instant = Clock.System.now(), timeZone: TimeZone = TimeZone.currentSystemDefault()): String =
     when (now.toLocalDateTime(timeZone).hour) {
