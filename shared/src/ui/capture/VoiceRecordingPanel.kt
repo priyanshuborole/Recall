@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.zerotwodev.recall.presentation.MAX_RECORDING_MS
 import com.zerotwodev.recall.presentation.VoiceCaptureUiState
@@ -33,7 +35,7 @@ fun VoiceRecordingPanel(state: VoiceCaptureUiState, modifier: Modifier = Modifie
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 Text(
-                    if (state.willCancel) "Release to cancel" else "Listening…",
+                    if (state.willCancel) "Release to cancel" else "Listening on your phone…",
                     style = MaterialTheme.typography.titleMedium,
                     color = if (state.willCancel) barColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -50,6 +52,15 @@ fun VoiceRecordingPanel(state: VoiceCaptureUiState, modifier: Modifier = Modifie
                             cornerRadius = CornerRadius(barWidth / 2),
                         )
                     }
+                }
+                if (state.transcript.isNotBlank()) {
+                    Text(
+                        state.transcript,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        maxLines = 6,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
                 Text(
                     "Up to ${formatRecordingTime(MAX_RECORDING_MS)}",

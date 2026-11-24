@@ -15,10 +15,9 @@ recall it years later (Timeline, On this day). Built for the owner first, Play S
   Palettes in `shared/src/ui/theme/Color.kt`. Mood colours never change with the theme.
 - **AI:** Firebase AI Logic + Gemini Flash-Lite, paid tier, nothing stored. Not built yet.
   The toolchain reads `androidApp/google-services.json` itself; iOS adds Firebase as a Swift package.
-- **Voice capture:** hold to record, release to save, slide left to cancel (design board 4).
-  Recordings are AAC `.m4a`, mono, 64 kbps, max 60 s.
-- **Voice is text-only (decided 2026-11-23):** keep a clip only until its transcript is saved, then delete
-  it. A failed or offline transcription keeps the clip for retry. No voice playback.
+- **Voice capture:** hold to speak, release to save, slide left to cancel (design board 4). Max 60 s.
+- **Voice is text-only and on-device (decided 2026-11-23):** Android's on-device `SpeechRecognizer` turns
+  speech into text while the mic is held. No audio file, no AI, no cloud, no playback. Needs Android 12+.
 - **Backup:** Android Auto Backup covers the database and settings only. Never add `media/`: the 25 MB app
   limit could stop the database backing up too. Photos need their own backup plan later.
 

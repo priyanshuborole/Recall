@@ -14,7 +14,6 @@ import com.zerotwodev.recall.domain.MemoryType
 import com.zerotwodev.recall.domain.Mood
 import com.zerotwodev.recall.domain.Person
 import com.zerotwodev.recall.domain.Place
-import com.zerotwodev.recall.domain.RecordedAudio
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -61,16 +60,6 @@ class RoomMemoryRepository(
     override suspend fun create(draft: MemoryDraft): String {
         val memory = newEntity(draft)
         dao.save(memory)
-        return memory.id
-    }
-
-    override suspend fun createVoice(draft: MemoryDraft, audio: RecordedAudio): String {
-        val memory = newEntity(draft)
-        val media = newMedia(memory.id, MediaKind.AUDIO, audio.fileName, audio.durationMs, memory.createdAt)
-        write {
-            dao.save(memory)
-            mediaDao.save(media)
-        }
         return memory.id
     }
 

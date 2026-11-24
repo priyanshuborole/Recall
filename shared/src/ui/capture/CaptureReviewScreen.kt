@@ -53,6 +53,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zerotwodev.recall.domain.MemoryDetails
+import com.zerotwodev.recall.domain.MemoryType
 import com.zerotwodev.recall.domain.Mood
 import com.zerotwodev.recall.domain.Person
 import com.zerotwodev.recall.presentation.CaptureReviewViewModel
@@ -154,16 +155,17 @@ private fun ReviewContent(
             Text("Suggested title · tap to edit", style = MaterialTheme.typography.bodySmall, color = muted)
             TitleField(details.memory.id, details.memory.title, onTitleChange)
 
-            details.audio?.let { audio ->
+            if (details.memory.type == MemoryType.VOICE) {
+                val audio = details.audio
                 Spacer(Modifier.height(14.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(RecallIcons.Mic, contentDescription = null, tint = muted, modifier = Modifier.size(14.dp))
-                    Text("Voice note · ${formatDuration(audio.durationMs ?: 0)}", style = MaterialTheme.typography.bodySmall, color = muted)
+                    Text(if (audio != null) "Voice note · ${formatDuration(audio.durationMs ?: 0)}" else "Voice note · transcribed on device", style = MaterialTheme.typography.bodySmall, color = muted)
                 }
                 Spacer(Modifier.height(8.dp))
                 val transcript = details.memory.transcript?.takeIf { it.isNotBlank() }
                 Text(
-                    transcript ?: "The transcript will appear here",
+                    transcript ?: "No transcript for this note",
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (transcript == null) muted else MaterialTheme.colorScheme.onBackground,
                 )

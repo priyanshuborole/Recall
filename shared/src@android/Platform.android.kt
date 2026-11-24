@@ -23,7 +23,7 @@ fun createAppContainer(context: Context): AppContainer {
         settingsRepository = SettingsRepositoryImpl(
             SharedPreferencesStore(appContext.getSharedPreferences("recall_settings", Context.MODE_PRIVATE))
         ),
-        audioRecorder = AndroidAudioRecorder(appContext),
+        speechTranscriber = AndroidSpeechTranscriber(appContext),
         micPermission = AndroidMicPermission(appContext),
         photoPicker = AndroidPhotoPicker(appContext),
         imageStore = AndroidImageStore(appContext),

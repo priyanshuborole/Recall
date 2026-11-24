@@ -1,10 +1,10 @@
 package com.zerotwodev.recall
 
-import com.zerotwodev.recall.domain.AudioRecorder
 import com.zerotwodev.recall.domain.MemoryRepository
 import com.zerotwodev.recall.domain.MicPermission
 import com.zerotwodev.recall.domain.PhotoPicker
 import com.zerotwodev.recall.domain.SettingsRepository
+import com.zerotwodev.recall.domain.SpeechTranscriber
 import com.zerotwodev.recall.ui.ImageStore
 import kotlin.time.Clock
 
@@ -16,7 +16,7 @@ import kotlin.time.Clock
 class AppContainer(
     val memoryRepository: MemoryRepository,
     val settingsRepository: SettingsRepository,
-    val audioRecorder: AudioRecorder,
+    val speechTranscriber: SpeechTranscriber,
     val micPermission: MicPermission,
     val photoPicker: PhotoPicker,
     val imageStore: ImageStore,

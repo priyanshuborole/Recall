@@ -126,7 +126,7 @@ fun App(
                     Screen.Home -> HomeScreen(
                         viewModel = viewModel { HomeViewModel(container.memoryRepository, container.photoPicker, container.clock) },
                         voiceViewModel = viewModel {
-                            VoiceCaptureViewModel(container.audioRecorder, container.micPermission, container.memoryRepository)
+                            VoiceCaptureViewModel(container.speechTranscriber, container.micPermission, container.memoryRepository)
                         },
                         onOpenMemory = { navigator.open(Screen.Detail(it)) },
                         onSeeAll = { navigator.switchTab(Screen.Timeline) },

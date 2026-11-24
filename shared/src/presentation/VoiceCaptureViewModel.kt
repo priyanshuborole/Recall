@@ -2,15 +2,16 @@ package com.zerotwodev.recall.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zerotwodev.recall.domain.AudioRecorder
 import com.zerotwodev.recall.domain.MemoryDraft
 import com.zerotwodev.recall.domain.MemoryRepository
 import com.zerotwodev.recall.domain.MemoryType
 import com.zerotwodev.recall.domain.MicPermission
-import com.zerotwodev.recall.domain.RecordedAudio
+import com.zerotwodev.recall.domain.SpeechEvent
+import com.zerotwodev.recall.domain.SpeechTranscriber
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -21,23 +22,26 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.TimeSource
 
 const val WAVEFORM_BARS = 34
 const val MAX_RECORDING_MS = 60_000L
 private const val MIN_RECORDING_MS = 1_000L
+private const val FINAL_WORDS_TIMEOUT_MS = 4_000L
 private const val TICK_MS = 50L
 
 data class VoiceCaptureUiState(
     val isRecording: Boolean = false,
     val elapsedMs: Long = 0,
     val levels: List<Float> = List(WAVEFORM_BARS) { 0f },
+    val transcript: String = "",
     val willCancel: Boolean = false,
 )
 
-/** Hold to record, release to save, slide left to cancel. */
+/** Hold to speak, release to save the words, slide left to cancel. No audio is kept. */
 class VoiceCaptureViewModel(
-    private val recorder: AudioRecorder,
+    private val transcriber: SpeechTranscriber,
     private val micPermission: MicPermission,
     private val repository: MemoryRepository,
 ) : ViewModel() {
@@ -59,7 +63,7 @@ class VoiceCaptureViewModel(
     fun onPress() {
         if (session?.isActive == true) return
         held = true
-        session = viewModelScope.launch { record() }
+        session = viewModelScope.launch { listen() }
     }
 
     fun onSlide(willCancel: Boolean) {
@@ -71,73 +75,80 @@ class VoiceCaptureViewModel(
         held = false
     }
 
-    private suspend fun record() {
+    private suspend fun listen() {
         if (!micPermission.isGranted()) {
             held = false
             val granted = micPermission.request()
             _messages.send(
-                if (granted) "Your microphone is ready. Hold to record."
-                else "Recall needs the microphone to record. You can allow it in your phone's settings."
+                if (granted) "Your microphone is ready. Hold to speak."
+                else "Recall needs the microphone to hear you. You can allow it in your phone's settings."
             )
             return
         }
-        if (!recorder.start()) {
+        if (!transcriber.isAvailable()) {
             held = false
-            _messages.send("Recording couldn't start. Please try again.")
+            _messages.send("Voice notes need on-device speech recognition, which this phone doesn't have. You can write this memory instead.")
             return
         }
 
-        var finished = false
-        try {
-            val startedAt = TimeSource.Monotonic.markNow()
-            var elapsed = 0L
-            _state.value = VoiceCaptureUiState(isRecording = true)
-            while (held && elapsed < MAX_RECORDING_MS) {
-                val level = recorder.level()
-                elapsed = startedAt.elapsedNow().inWholeMilliseconds
-                _state.update { it.copy(elapsedMs = elapsed, levels = it.levels.drop(1) + level) }
-                delay(TICK_MS)
-            }
-            val cancelled = _state.value.willCancel
-            _state.value = VoiceCaptureUiState()
-            finished = true
-            withContext(NonCancellable) { finish(cancelled, elapsed) }
-        } finally {
-            if (!finished) {
-                _state.value = VoiceCaptureUiState()
-                withContext(NonCancellable) { recorder.cancel() }
-            }
-        }
-    }
-
-    private suspend fun finish(cancelled: Boolean, elapsedMs: Long) {
-        when {
-            cancelled -> recorder.cancel()
-            elapsedMs < MIN_RECORDING_MS -> {
-                recorder.cancel()
-                _messages.trySend("Hold the mic a little longer to record.")
-            }
-            else -> {
-                val audio = recorder.stop()
-                if (audio == null) {
-                    _messages.trySend("That recording couldn't be saved. Please try again.")
-                } else {
-                    save(audio, reachedLimit = elapsedMs >= MAX_RECORDING_MS)
+        var problem: SpeechEvent? = null
+        _state.value = VoiceCaptureUiState(isRecording = true)
+        val listener = viewModelScope.launch {
+            transcriber.listen().collect { event ->
+                when (event) {
+                    is SpeechEvent.Level -> _state.update { it.copy(levels = it.levels.drop(1) + event.value) }
+                    is SpeechEvent.Transcript -> _state.update { it.copy(transcript = event.text) }
+                    SpeechEvent.LanguageUnavailable, SpeechEvent.Failed -> problem = event
                 }
             }
         }
+
+        try {
+            val startedAt = TimeSource.Monotonic.markNow()
+            var elapsed = 0L
+            while (held && elapsed < MAX_RECORDING_MS && listener.isActive) {
+                elapsed = startedAt.elapsedNow().inWholeMilliseconds
+                _state.update { it.copy(elapsedMs = elapsed) }
+                delay(TICK_MS)
+            }
+            val cancelled = _state.value.willCancel
+            if (cancelled || elapsed < MIN_RECORDING_MS) {
+                listener.cancelAndJoin()
+            } else {
+                transcriber.finish()
+                withTimeoutOrNull(FINAL_WORDS_TIMEOUT_MS) { listener.join() }
+                listener.cancelAndJoin()
+            }
+            val text = _state.value.transcript.trim()
+            _state.value = VoiceCaptureUiState()
+            withContext(NonCancellable) { finish(cancelled, elapsed, text, problem, elapsed >= MAX_RECORDING_MS) }
+        } finally {
+            listener.cancel()
+            _state.value = VoiceCaptureUiState()
+        }
     }
 
-    private suspend fun save(audio: RecordedAudio, reachedLimit: Boolean) {
+    private suspend fun finish(cancelled: Boolean, elapsedMs: Long, text: String, problem: SpeechEvent?, reachedLimit: Boolean) {
+        when {
+            cancelled -> Unit
+            text.isNotEmpty() -> save(text, reachedLimit)
+            problem == SpeechEvent.LanguageUnavailable ->
+                _messages.trySend("Your phone is getting its speech pack for this language. Try again in a few minutes.")
+            problem == SpeechEvent.Failed -> _messages.trySend("Listening stopped. Please try again.")
+            elapsedMs < MIN_RECORDING_MS -> _messages.trySend("Hold the mic while you speak.")
+            else -> _messages.trySend("I didn't catch any words. Please try again.")
+        }
+    }
+
+    private suspend fun save(text: String, reachedLimit: Boolean) {
         try {
-            val id = repository.createVoice(MemoryDraft(body = "", type = MemoryType.VOICE, title = "Voice note"), audio)
-            if (reachedLimit) _messages.trySend("Saved your voice note at the 1 minute limit.")
+            val id = repository.create(MemoryDraft(body = text, type = MemoryType.VOICE, transcript = text))
+            if (reachedLimit) _messages.trySend("Saved your note at the 1 minute limit.")
             _savedMemories.trySend(id)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            recorder.delete(audio.fileName)
-            _messages.trySend("That recording couldn't be saved. Please try again.")
+            _messages.trySend("That note couldn't be saved. Please try again.")
         }
     }
 }

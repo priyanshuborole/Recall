@@ -7,13 +7,15 @@ import com.zerotwodev.recall.data.SettingsRepositoryImpl
 import com.zerotwodev.recall.data.local.AppDatabase
 import com.zerotwodev.recall.data.local.RoomMemoryRepository
 import com.zerotwodev.recall.data.local.buildDatabase
-import com.zerotwodev.recall.domain.AudioRecorder
 import com.zerotwodev.recall.domain.MicPermission
 import com.zerotwodev.recall.domain.PhotoPickResult
 import com.zerotwodev.recall.domain.PhotoPicker
-import com.zerotwodev.recall.domain.RecordedAudio
+import com.zerotwodev.recall.domain.SpeechEvent
+import com.zerotwodev.recall.domain.SpeechTranscriber
 import com.zerotwodev.recall.ui.ImageStore
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSUserDefaults
@@ -29,7 +31,7 @@ fun createAppContainer(): AppContainer {
     return AppContainer(
         memoryRepository = RoomMemoryRepository(database, clock),
         settingsRepository = SettingsRepositoryImpl(UserDefaultsStore(NSUserDefaults.standardUserDefaults)),
-        audioRecorder = UnavailableAudioRecorder,
+        speechTranscriber = UnavailableSpeechTranscriber,
         micPermission = UnavailableMicPermission,
         photoPicker = UnavailablePhotoPicker,
         imageStore = UnavailableImageStore,
@@ -46,13 +48,11 @@ private object UnavailableImageStore : ImageStore {
     override suspend fun load(fileName: String, maxSidePx: Int): ImageBitmap? = null
 }
 
-// Android comes first. AVAudioRecorder goes here when iOS work resumes.
-private object UnavailableAudioRecorder : AudioRecorder {
-    override suspend fun start() = false
-    override fun level() = 0f
-    override suspend fun stop(): RecordedAudio? = null
-    override suspend fun cancel() = Unit
-    override suspend fun delete(fileName: String) = Unit
+// Android comes first. SFSpeechRecognizer goes here when iOS work resumes.
+private object UnavailableSpeechTranscriber : SpeechTranscriber {
+    override fun isAvailable() = false
+    override fun listen(): Flow<SpeechEvent> = emptyFlow()
+    override fun finish() = Unit
 }
 
 private object UnavailableMicPermission : MicPermission {
