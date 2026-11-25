@@ -31,6 +31,7 @@ import com.zerotwodev.recall.presentation.VoiceCaptureViewModel
 import com.zerotwodev.recall.ui.capture.CaptureReviewScreen
 import com.zerotwodev.recall.ui.detail.MemoryDetailScreen
 import com.zerotwodev.recall.ui.home.HomeScreen
+import com.zerotwodev.recall.ui.onboarding.OnboardingScreen
 import com.zerotwodev.recall.ui.settings.AppearanceScreen
 import com.zerotwodev.recall.ui.settings.SettingsScreen
 import com.zerotwodev.recall.ui.theme.RecallTheme
@@ -93,6 +94,19 @@ fun App(
     val settings by container.settingsRepository.settings.collectAsState()
 
     RecallTheme(theme = settings.theme, darkTheme = settings.themeMode.isDark()) {
+        if (!settings.onboardingDone) {
+            val scope = rememberCoroutineScope()
+            OnboardingScreen(
+                initialReminderMinute = settings.reminderMinuteOfDay,
+                onFinish = { minute ->
+                    scope.launch {
+                        minute?.let { container.settingsRepository.setReminderMinuteOfDay(it) }
+                        container.settingsRepository.setOnboardingDone()
+                    }
+                },
+            )
+            return@RecallTheme
+        }
         val snackbar = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
         val current = navigator.current
