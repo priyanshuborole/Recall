@@ -1,6 +1,22 @@
 package com.zerotwodev.recall.ui.detail
 
 import androidx.compose.foundation.BorderStroke
+import com.zerotwodev.recall.util.toDisplayDate
+import com.zerotwodev.recall.domain.Reflection
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,6 +87,7 @@ fun MemoryDetailScreen(
             imageStore = imageStore,
             onBack = onBack,
             onToggleHidden = { viewModel.setHidden(!s.memory.isHidden) },
+            onAddReflection = viewModel::addReflection,
             onDelete = { confirmDelete = true },
         )
     }
@@ -97,6 +114,7 @@ private fun MemoryContent(
     imageStore: ImageStore,
     onBack: () -> Unit,
     onToggleHidden: () -> Unit,
+    onAddReflection: (String) -> Unit,
     onDelete: () -> Unit,
 ) {
     val memory = details.memory
@@ -167,6 +185,7 @@ private fun MemoryContent(
             memory.transcript?.takeIf { it.isNotBlank() && it != memory.body }?.let {
                 Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            LookingBack(details.reflections, onAddReflection)
         }
     }
 }
@@ -219,6 +238,69 @@ private fun DetailChip(label: String, leading: @Composable () -> Unit) {
         ) {
             leading()
             Text(label, style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}
+
+/** Thoughts added later. Saved when the person presses Return or Add. */
+@Composable
+private fun LookingBack(reflections: List<Reflection>, onAdd: (String) -> Unit) {
+    var draft by rememberSaveable { mutableStateOf("") }
+    val focus = LocalFocusManager.current
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val outline = MaterialTheme.colorScheme.outline
+    val serifItalic = MaterialTheme.typography.titleSmall.copy(fontStyle = FontStyle.Italic, fontWeight = FontWeight.Normal, fontSize = 14.5.sp)
+    fun submit() {
+        if (draft.isNotBlank()) {
+            onAdd(draft)
+            draft = ""
+            focus.clearFocus()
+        }
+    }
+
+    Column(Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        HorizontalDivider(color = outline)
+        Text("Looking back", style = MaterialTheme.typography.titleSmall.copy(fontSize = 17.sp))
+        reflections.forEach { reflection ->
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(reflection.text, style = serifItalic.copy(fontSize = 15.sp, lineHeight = 22.sp))
+                Text(reflection.createdAt.toDisplayDate(), style = MaterialTheme.typography.labelMedium, color = muted)
+            }
+        }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 44.dp)
+                .drawBehind {
+                    drawRoundRect(
+                        color = outline,
+                        cornerRadius = CornerRadius(12.dp.toPx()),
+                        style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))),
+                    )
+                }
+                .padding(start = 14.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(RecallIcons.Plus, contentDescription = null, tint = muted, modifier = Modifier.size(16.dp))
+            Box(Modifier.weight(1f).padding(vertical = 10.dp)) {
+                if (draft.isEmpty()) Text("Add a thought, looking back…", style = serifItalic, color = muted)
+                BasicTextField(
+                    value = draft,
+                    onValueChange = { input ->
+                        if (input.endsWith("\n")) {
+                            draft = input.trimEnd('\n')
+                            submit()
+                        } else {
+                            draft = input
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Add a reflection" },
+                    textStyle = serifItalic.copy(color = MaterialTheme.colorScheme.onBackground),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                )
+            }
+            if (draft.isNotBlank()) TextButton(onClick = ::submit) { Text("Add") }
         }
     }
 }

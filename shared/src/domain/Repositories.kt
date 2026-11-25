@@ -38,6 +38,9 @@ interface MemoryRepository {
     /** Removes the person from this memory only. */
     suspend fun removePerson(id: String, personId: String)
 
+    /** Adds a "Looking back" thought to a memory. */
+    suspend fun addReflection(id: String, text: String)
+
     /** One place per memory. Null clears it. */
     suspend fun setPlace(id: String, name: String?)
     suspend fun update(memory: Memory)

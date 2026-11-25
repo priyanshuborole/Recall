@@ -16,8 +16,9 @@ import kotlinx.coroutines.*
         PersonEntity::class,
         MemoryPersonEntity::class,
         PlaceEntity::class,
+        ReflectionEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -27,6 +28,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun personDao(): PersonDao
     abstract fun memoryPersonDao(): MemoryPersonDao
     abstract fun placeDao(): PlaceDao
+    abstract fun reflectionDao(): ReflectionDao
 
     companion object {
         const val FILE_NAME = "recall.db"
@@ -43,5 +45,6 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
 internal fun buildDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
     builder
         .setDriver(BundledSQLiteDriver())
+        .addMigrations(*ALL_MIGRATIONS)
         .setQueryCoroutineContext(Dispatchers.IO)
         .build()

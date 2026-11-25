@@ -14,6 +14,7 @@ import com.zerotwodev.recall.domain.MemoryType
 import com.zerotwodev.recall.domain.Mood
 import com.zerotwodev.recall.domain.Person
 import com.zerotwodev.recall.domain.Place
+import com.zerotwodev.recall.domain.Reflection
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -36,6 +37,7 @@ class RoomMemoryRepository(
     private val personDao: PersonDao = database.personDao()
     private val memoryPersonDao: MemoryPersonDao = database.memoryPersonDao()
     private val placeDao: PlaceDao = database.placeDao()
+    private val reflectionDao: ReflectionDao = database.reflectionDao()
     private val timeZone: TimeZone get() = TimeZone.currentSystemDefault()
 
     override fun observeRecent(limit: Int): Flow<List<Memory>> =
@@ -78,13 +80,15 @@ class RoomMemoryRepository(
         mediaDao.observeForMemory(id),
         memoryPersonDao.observePeopleFor(id),
         placeDao.observeForMemory(id),
-    ) { memory, media, people, place ->
+        reflectionDao.observeFor(id),
+    ) { memory, media, people, place, reflections ->
         memory?.let {
             MemoryDetails(
                 memory = it.toDomain(),
                 media = media.mapNotNull { row -> row.toDomain() },
                 people = people.map { row -> Person(row.id, row.name) },
                 place = place?.let { row -> Place(row.id, row.name) },
+                reflections = reflections.map { row -> Reflection(row.id, row.text, Instant.fromEpochMilliseconds(row.createdAt)) },
             )
         }
     }
@@ -126,6 +130,16 @@ class RoomMemoryRepository(
         val now = clock.now().toEpochMilliseconds()
         write {
             memoryPersonDao.unlink(id, personId)
+            dao.touch(id, now)
+        }
+    }
+
+    override suspend fun addReflection(id: String, text: String) {
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return
+        val now = clock.now().toEpochMilliseconds()
+        write {
+            reflectionDao.insert(ReflectionEntity(Uuid.random().toString(), id, trimmed, now, now, null))
             dao.touch(id, now)
         }
     }

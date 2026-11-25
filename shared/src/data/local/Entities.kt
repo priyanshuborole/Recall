@@ -74,3 +74,14 @@ data class PlaceEntity(
     val updatedAt: Long,
     val deletedAt: Long?,
 )
+
+/** A thought added later, looking back at a memory. Added in database version 2. */
+@Entity(tableName = "reflection", indices = [Index("memoryId")])
+data class ReflectionEntity(
+    @PrimaryKey val id: String,
+    val memoryId: String,
+    val text: String,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val deletedAt: Long?,
+)
