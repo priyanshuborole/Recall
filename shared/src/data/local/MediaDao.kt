@@ -13,4 +13,10 @@ interface MediaDao {
 
     @Query("SELECT * FROM media WHERE memoryId = :memoryId AND deletedAt IS NULL ORDER BY createdAt")
     fun observeForMemory(memoryId: String): Flow<List<MediaEntity>>
+
+    /** The first photo of each memory. SQLite returns the row that holds MIN(createdAt). */
+    @Query("SELECT memoryId, fileName, MIN(createdAt) AS createdAt FROM media WHERE kind = 'PHOTO' AND deletedAt IS NULL GROUP BY memoryId")
+    fun observeCovers(): Flow<List<MemoryCover>>
 }
+
+data class MemoryCover(val memoryId: String, val fileName: String, val createdAt: Long)

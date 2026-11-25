@@ -37,6 +37,25 @@ object RecallIcons {
     )
     val Search = icon("Search", "M5 11a6 6 0 1 0 12 0a6 6 0 1 0-12 0", "M20 20l-4.5-4.5")
     val Back = icon("Back", "M19 12H5", "M11 6l-6 6 6 6")
+    /** Open book for the empty Timeline (board 6b), drawn on a 148×104 canvas. */
+    val Book = ImageVector.Builder("Book", 148.dp, 104.dp, 148f, 104f).apply {
+        listOf(
+            "M74 22c-14-9-36-11-58-6v74c22-5 44-3 58 6 14-9 36-11 58-6V16c-22-5-44-3-58 6z",
+            "M74 22v74",
+            "M28 36c12-2 24-1 34 3M28 48c12-2 24-1 34 3M28 60c8-1 16-1 22 1",
+            "M86 39c10-4 22-5 34-3M86 51c6-2 12-3 18-3",
+            "M102 68a10 10 0 1 0 20 0a10 10 0 1 0-20 0",
+            "M112 63v6M108.5 67.5a3.5 3.5 0 0 0 7 0M112 71v2",
+        ).forEach { data ->
+            addPath(
+                pathData = addPathNodes(data),
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.6f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            )
+        }
+    }.build()
     val Close = icon("Close", "M6 6l12 12M18 6L6 18")
     val Check = icon("Check", "M5 12l5 5 9-10", strokeWidth = 2.2f)
     val Plus = icon("Plus", "M12 5v14M5 12h14")

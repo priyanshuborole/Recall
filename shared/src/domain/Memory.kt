@@ -14,6 +14,9 @@ data class Memory(
     val isHidden: Boolean,
     val createdAt: Instant,
     val updatedAt: Instant,
+    /** First photo's file name, for list thumbnails. */
+    val coverPhoto: String? = null,
+    val placeName: String? = null,
 )
 
 /** What the user provides when capturing. Everything else is filled in by the repository. */

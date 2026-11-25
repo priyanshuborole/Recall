@@ -130,6 +130,7 @@ fun App(
                             VoiceCaptureViewModel(container.speechTranscriber, container.micPermission, container.memoryRepository)
                         },
                         onOpenMemory = { navigator.open(Screen.Detail(it)) },
+                        imageStore = container.imageStore,
                         onSeeAll = { navigator.switchTab(Screen.Timeline) },
                         onReview = { navigator.open(Screen.CaptureReview(it)) },
                         onMessage = showMessage,
@@ -153,7 +154,9 @@ fun App(
                     )
                     Screen.Timeline -> TimelineScreen(
                         viewModel = viewModel { TimelineViewModel(container.memoryRepository) },
+                        imageStore = container.imageStore,
                         onOpenMemory = { navigator.open(Screen.Detail(it)) },
+                        onGoHome = { navigator.switchTab(Screen.Home) },
                     )
                     Screen.Settings -> SettingsScreen(
                         viewModel = viewModel { SettingsViewModel(container.settingsRepository) },

@@ -53,4 +53,9 @@ interface PlaceDao {
         """
     )
     fun observeForMemory(memoryId: String): Flow<PlaceEntity?>
+
+    @Query("SELECT memory.id AS memoryId, place.name AS name FROM memory JOIN place ON place.id = memory.placeId WHERE place.deletedAt IS NULL")
+    fun observeMemoryPlaces(): Flow<List<MemoryPlace>>
 }
+
+data class MemoryPlace(val memoryId: String, val name: String)

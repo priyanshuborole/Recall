@@ -7,6 +7,7 @@ import com.zerotwodev.recall.util.minuteOfDayText
 import com.zerotwodev.recall.util.toDisplayDate
 import com.zerotwodev.recall.util.toLongDay
 import com.zerotwodev.recall.util.toMonthHeader
+import com.zerotwodev.recall.util.toShortDay
 import com.zerotwodev.recall.util.yearsAgoText
 import kotlinx.datetime.TimeZone
 import kotlin.test.Test
@@ -39,4 +40,7 @@ class DateTextTest {
         val midnight = LocalDateTime(2026, 1, 1, 0, 5).toInstant(TimeZone.UTC)
         assertEquals("Thursday, 1 January 2026 · 12:05 AM", midnight.toFullDateTime(TimeZone.UTC))
     }
+
+    @Test
+    fun shortDay() = assertEquals("Tue, 10 Nov", instant.toShortDay(utc))
 }
