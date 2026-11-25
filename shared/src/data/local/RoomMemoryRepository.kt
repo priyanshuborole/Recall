@@ -41,14 +41,21 @@ class RoomMemoryRepository(
     private val reflectionDao: ReflectionDao = database.reflectionDao()
     private val timeZone: TimeZone get() = TimeZone.currentSystemDefault()
 
-    override fun observeRecent(limit: Int): Flow<List<Memory>> =
-        dao.observeRecent(limit).map { rows -> rows.map { it.toDomain() } }
+    override fun observeRecent(limit: Int): Flow<List<Memory>> = withListExtras(dao.observeRecent(limit))
 
     override fun observeTimeline(query: String): Flow<List<Memory>> {
         val trimmed = query.trim()
         val source = if (trimmed.isEmpty()) dao.observeAll() else dao.search(trimmed)
-        return source.map { rows -> rows.map { it.toDomain() } }
+        return withListExtras(source)
     }
+
+    /** Adds the cover photo and place that list cards show. */
+    private fun withListExtras(rows: Flow<List<MemoryEntity>>): Flow<List<Memory>> =
+        combine(rows, mediaDao.observeCovers(), placeDao.observeMemoryPlaces()) { memories, covers, places ->
+            val coverBy = covers.associate { it.memoryId to it.fileName }
+            val placeBy = places.associate { it.memoryId to it.name }
+            memories.map { it.toDomain().copy(coverPhoto = coverBy[it.id], placeName = placeBy[it.id]) }
+        }
 
     override fun observeOnThisDay(): Flow<List<Memory>> =
         // Re-evaluate "today" each time the flow is collected.

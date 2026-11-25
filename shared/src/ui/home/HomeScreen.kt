@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zerotwodev.recall.domain.Memory
 import com.zerotwodev.recall.presentation.HomeViewModel
 import com.zerotwodev.recall.presentation.VoiceCaptureViewModel
+import com.zerotwodev.recall.ui.ImageStore
 import com.zerotwodev.recall.ui.RecallIcons
 import com.zerotwodev.recall.ui.capture.TextCaptureSheet
 import com.zerotwodev.recall.ui.capture.VoiceRecordingPanel
@@ -51,6 +52,7 @@ import kotlin.time.Instant
 fun HomeScreen(
     viewModel: HomeViewModel,
     voiceViewModel: VoiceCaptureViewModel,
+    imageStore: ImageStore,
     onOpenMemory: (String) -> Unit,
     onSeeAll: () -> Unit,
     onReview: (String) -> Unit,
@@ -98,7 +100,7 @@ fun HomeScreen(
                     )
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    state.recent.forEach { memory -> MemoryCard(memory, onClick = { onOpenMemory(memory.id) }) }
+                    state.recent.forEach { memory -> MemoryCard(memory, onClick = { onOpenMemory(memory.id) }, imageStore = imageStore) }
                 }
             }
             if (voice.isRecording) VoiceRecordingPanel(voice)

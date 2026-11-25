@@ -37,12 +37,15 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.zerotwodev.recall.ui.PhotoThumbnail
+import com.zerotwodev.recall.ui.ImageStore
+import androidx.compose.ui.unit.sp
 import com.zerotwodev.recall.domain.Memory
 import com.zerotwodev.recall.domain.MemoryType
 import com.zerotwodev.recall.domain.Mood
 import com.zerotwodev.recall.ui.RecallIcons
 import com.zerotwodev.recall.ui.theme.colors
-import com.zerotwodev.recall.util.toDisplayDate
+import com.zerotwodev.recall.util.toShortDay
 
 /** Small pill with a dot and a word. Selectable when [onClick] is set (capture sheet). */
 @Composable
@@ -76,8 +79,10 @@ fun MoodChip(
 fun MemoryCard(
     memory: Memory,
     onClick: () -> Unit,
+    imageStore: ImageStore,
     modifier: Modifier = Modifier,
 ) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Surface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -86,22 +91,33 @@ fun MemoryCard(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            modifier = Modifier.padding(start = 14.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(memory.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    memory.occurredAt.toDisplayDate(),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    memory.title,
+                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.5.sp, lineHeight = 21.sp),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    memory.mood?.let { MoodChip(it) }
+                    Text(
+                        listOfNotNull(memory.occurredAt.toShortDay(), memory.placeName).joinToString(" · "),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = muted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (memory.type == MemoryType.VOICE) {
+                        Icon(RecallIcons.Mic, contentDescription = "Voice note", tint = muted, modifier = Modifier.size(14.dp))
+                    }
+                }
             }
-            if (memory.type == MemoryType.VOICE) {
-                Icon(RecallIcons.Mic, contentDescription = "Has a voice note", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            memory.mood?.let { MoodChip(it) }
+            memory.coverPhoto?.let { PhotoThumbnail(it, imageStore, Modifier.size(56.dp)) }
         }
     }
 }

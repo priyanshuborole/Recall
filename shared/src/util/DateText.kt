@@ -37,6 +37,12 @@ fun Instant.toLongDay(timeZone: TimeZone = TimeZone.currentSystemDefault()): Str
     return "${weekdays[date.dayOfWeek.ordinal]}, ${dayOf(date)} ${longMonths[monthIndex(date)]}"
 }
 
+/** "Mon, 9 Nov" */
+fun Instant.toShortDay(timeZone: TimeZone = TimeZone.currentSystemDefault()): String {
+    val date = toLocalDateTime(timeZone).date
+    return "${weekdays[date.dayOfWeek.ordinal].take(3)}, ${dayOf(date)} ${shortMonths[monthIndex(date)]}"
+}
+
 /** "Sunday, 25 October 2026 · 8:40 PM" */
 fun Instant.toFullDateTime(timeZone: TimeZone = TimeZone.currentSystemDefault()): String {
     val local = toLocalDateTime(timeZone)
