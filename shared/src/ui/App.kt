@@ -45,6 +45,7 @@ sealed interface Screen {
     data object Appearance : Screen
     data class Detail(val memoryId: String) : Screen
     data class CaptureReview(val memoryId: String) : Screen
+    data class EditMemory(val memoryId: String) : Screen
 }
 
 /**
@@ -133,6 +134,15 @@ fun App(
                         onReview = { navigator.open(Screen.CaptureReview(it)) },
                         onMessage = showMessage,
                     )
+                    is Screen.EditMemory -> CaptureReviewScreen(
+                        viewModel = viewModel(key = "edit-${current.memoryId}") {
+                            CaptureReviewViewModel(current.memoryId, container.memoryRepository, container.photoPicker)
+                        },
+                        imageStore = container.imageStore,
+                        onClose = { navigator.back() },
+                        onMessage = showMessage,
+                        editing = true,
+                    )
                     is Screen.CaptureReview -> CaptureReviewScreen(
                         viewModel = viewModel(key = "review-${current.memoryId}") {
                             CaptureReviewViewModel(current.memoryId, container.memoryRepository, container.photoPicker)
@@ -159,6 +169,7 @@ fun App(
                             MemoryDetailViewModel(current.memoryId, container.memoryRepository)
                         },
                         imageStore = container.imageStore,
+                        onEdit = { navigator.open(Screen.EditMemory(current.memoryId)) },
                         onBack = { navigator.back() },
                     )
                 }

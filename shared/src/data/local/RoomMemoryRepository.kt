@@ -112,6 +112,10 @@ class RoomMemoryRepository(
         if (trimmed.isNotEmpty()) dao.setTitle(id, trimmed, clock.now().toEpochMilliseconds())
     }
 
+    override suspend fun setBody(id: String, body: String) {
+        dao.setBody(id, body.trim(), clock.now().toEpochMilliseconds())
+    }
+
     override suspend fun setMood(id: String, mood: Mood?) {
         dao.setMood(id, mood?.name, clock.now().toEpochMilliseconds())
     }

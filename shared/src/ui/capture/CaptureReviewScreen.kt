@@ -1,6 +1,8 @@
 package com.zerotwodev.recall.ui.capture
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,6 +72,7 @@ fun CaptureReviewScreen(
     imageStore: ImageStore,
     onClose: () -> Unit,
     onMessage: (String) -> Unit,
+    editing: Boolean = false,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var sheet by rememberSaveable { mutableStateOf<ReviewSheet?>(null) }
@@ -88,6 +91,8 @@ fun CaptureReviewScreen(
             details = details,
             imageStore = imageStore,
             onTitleChange = viewModel::onTitleChange,
+            onBodyChange = viewModel::onBodyChange,
+            editing = editing,
             onOpenSheet = { sheet = it },
             onRemoveMood = { viewModel.setMood(null) },
             onRemovePerson = viewModel::removePerson,
@@ -133,6 +138,8 @@ private fun ReviewContent(
     details: MemoryDetails,
     imageStore: ImageStore,
     onTitleChange: (String) -> Unit,
+    onBodyChange: (String) -> Unit,
+    editing: Boolean,
     onOpenSheet: (ReviewSheet) -> Unit,
     onRemoveMood: () -> Unit,
     onRemovePerson: (String) -> Unit,
@@ -146,15 +153,24 @@ private fun ReviewContent(
             IconButton(onClick = onClose, modifier = Modifier.align(Alignment.CenterStart).padding(end = 8.dp)) {
                 Icon(RecallIcons.Close, contentDescription = "Close")
             }
-            SavedPill(Modifier.align(Alignment.Center))
+            if (editing) {
+                Text("Edit memory", style = MaterialTheme.typography.titleMedium, modifier = Modifier.align(Alignment.Center))
+            } else {
+                SavedPill(Modifier.align(Alignment.Center))
+            }
         }
 
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             Spacer(Modifier.height(14.dp))
-            Text("Suggested title · tap to edit", style = MaterialTheme.typography.bodySmall, color = muted)
+            Text(if (editing) "Title" else "Suggested title · tap to edit", style = MaterialTheme.typography.bodySmall, color = muted)
             TitleField(details.memory.id, details.memory.title, onTitleChange)
+            if (editing) {
+                Spacer(Modifier.height(18.dp))
+                Text("What happened", style = MaterialTheme.typography.bodySmall, color = muted)
+                BodyField(details.memory.id, details.memory.body, onBodyChange)
+            }
 
-            details.audio?.let { audio ->
+            details.audio?.takeIf { !editing }?.let { audio ->
                 Spacer(Modifier.height(14.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(RecallIcons.Mic, contentDescription = null, tint = muted, modifier = Modifier.size(14.dp))
@@ -228,7 +244,7 @@ private fun ReviewContent(
             colors = ButtonDefaults.buttonColors(),
         ) { Text("Done", fontSize = 16.sp) }
         Text(
-            "Already saved — editing is optional",
+            if (editing) "Changes save as you go" else "Already saved — editing is optional",
             modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
             style = MaterialTheme.typography.bodySmall,
             color = muted,
@@ -279,6 +295,33 @@ private fun TitleField(memoryId: String, saved: String, onChange: (String) -> Un
         )
     }
     HorizontalDivider(Modifier.padding(top = 8.dp), thickness = 1.5.dp, color = MaterialTheme.colorScheme.outline)
+}
+
+@Composable
+private fun BodyField(memoryId: String, saved: String, onChange: (String) -> Unit) {
+    var body by rememberSaveable(memoryId) { mutableStateOf(saved) }
+    Box(
+        Modifier
+            .padding(top = 6.dp)
+            .fillMaxWidth()
+            .heightIn(min = 120.dp)
+            .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small)
+            .padding(12.dp),
+    ) {
+        if (body.isEmpty()) {
+            Text("A sentence is enough", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        BasicTextField(
+            value = body,
+            onValueChange = {
+                body = it
+                onChange(it)
+            },
+            modifier = Modifier.fillMaxWidth().semantics { contentDescription = "What happened" },
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        )
+    }
 }
 
 @Composable

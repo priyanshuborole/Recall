@@ -67,6 +67,7 @@ import com.zerotwodev.recall.util.toFullDateTime
 fun MemoryDetailScreen(
     viewModel: MemoryDetailViewModel,
     imageStore: ImageStore,
+    onEdit: () -> Unit,
     onBack: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -86,6 +87,7 @@ fun MemoryDetailScreen(
             details = s.details,
             imageStore = imageStore,
             onBack = onBack,
+            onEdit = onEdit,
             onToggleHidden = { viewModel.setHidden(!s.memory.isHidden) },
             onAddReflection = viewModel::addReflection,
             onDelete = { confirmDelete = true },
@@ -113,6 +115,7 @@ private fun MemoryContent(
     details: MemoryDetails,
     imageStore: ImageStore,
     onBack: () -> Unit,
+    onEdit: () -> Unit,
     onToggleHidden: () -> Unit,
     onAddReflection: (String) -> Unit,
     onDelete: () -> Unit,
@@ -123,7 +126,7 @@ private fun MemoryContent(
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp)) {
             RoundButton(RecallIcons.Back, "Back", onBack)
             Box(Modifier.weight(1f))
-            MoreMenu(isHidden = memory.isHidden, onToggleHidden = onToggleHidden, onDelete = onDelete)
+            MoreMenu(isHidden = memory.isHidden, onEdit = onEdit, onToggleHidden = onToggleHidden, onDelete = onDelete)
         }
     }
 
@@ -182,7 +185,7 @@ private fun MemoryContent(
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 24.sp),
                 )
             }
-            memory.transcript?.takeIf { it.isNotBlank() && it != memory.body }?.let {
+            memory.transcript?.takeIf { it.isNotBlank() && memory.body.isBlank() }?.let {
                 Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             LookingBack(details.reflections, onAddReflection)
@@ -205,11 +208,18 @@ private fun RoundButton(icon: ImageVector, description: String, onClick: () -> U
 }
 
 @Composable
-private fun MoreMenu(isHidden: Boolean, onToggleHidden: () -> Unit, onDelete: () -> Unit) {
+private fun MoreMenu(isHidden: Boolean, onEdit: () -> Unit, onToggleHidden: () -> Unit, onDelete: () -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
         RoundButton(RecallIcons.More, "More options") { open = true }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text("Edit") },
+                onClick = {
+                    open = false
+                    onEdit()
+                },
+            )
             DropdownMenuItem(
                 text = { Text(if (isHidden) "Show in recaps" else "Hide from recaps") },
                 onClick = {

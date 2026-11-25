@@ -32,6 +32,7 @@ interface MemoryRepository {
     fun observePeople(): Flow<List<Person>>
 
     suspend fun setTitle(id: String, title: String)
+    suspend fun setBody(id: String, body: String)
     suspend fun setMood(id: String, mood: Mood?)
     suspend fun addPhotos(id: String, fileNames: List<String>)
 
