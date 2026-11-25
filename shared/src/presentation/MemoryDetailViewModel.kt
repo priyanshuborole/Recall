@@ -32,6 +32,10 @@ class MemoryDetailViewModel(
         viewModelScope.launch { repository.setHidden(memoryId, hidden) }
     }
 
+    fun addReflection(text: String) {
+        viewModelScope.launch { repository.addReflection(memoryId, text) }
+    }
+
     fun delete(onDeleted: () -> Unit) {
         viewModelScope.launch {
             repository.delete(memoryId)

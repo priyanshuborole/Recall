@@ -35,12 +35,16 @@ enum class MediaKind { AUDIO, PHOTO }
 /** A file in the app's media folder, referenced by name. */
 data class MediaItem(val id: String, val kind: MediaKind, val fileName: String, val durationMs: Long?)
 
+/** A thought added later, looking back at a memory. */
+data class Reflection(val id: String, val text: String, val createdAt: Instant)
+
 /** A memory with everything attached to it. */
 data class MemoryDetails(
     val memory: Memory,
     val media: List<MediaItem>,
     val people: List<Person>,
     val place: Place?,
+    val reflections: List<Reflection> = emptyList(),
 ) {
     val audio: MediaItem? get() = media.firstOrNull { it.kind == MediaKind.AUDIO }
     val photos: List<MediaItem> get() = media.filter { it.kind == MediaKind.PHOTO }
