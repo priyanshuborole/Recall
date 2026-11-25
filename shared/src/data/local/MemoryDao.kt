@@ -21,7 +21,23 @@ interface MemoryDao {
         WHERE deletedAt IS NULL
           AND (title LIKE '%' || :query || '%'
                OR body LIKE '%' || :query || '%'
-               OR transcript LIKE '%' || :query || '%')
+               OR transcript LIKE '%' || :query || '%'
+               OR EXISTS (
+                   SELECT 1 FROM memory_person
+                   JOIN person ON person.id = memory_person.personId
+                   WHERE memory_person.memoryId = memory.id
+                     AND person.deletedAt IS NULL
+                     AND person.name LIKE '%' || :query || '%')
+               OR EXISTS (
+                   SELECT 1 FROM place
+                   WHERE place.id = memory.placeId
+                     AND place.deletedAt IS NULL
+                     AND place.name LIKE '%' || :query || '%')
+               OR EXISTS (
+                   SELECT 1 FROM reflection
+                   WHERE reflection.memoryId = memory.id
+                     AND reflection.deletedAt IS NULL
+                     AND reflection.text LIKE '%' || :query || '%'))
         ORDER BY occurredAt DESC
         """
     )

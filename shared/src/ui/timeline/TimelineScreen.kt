@@ -111,13 +111,13 @@ private fun SearchField(query: String, enabled: Boolean, onQueryChange: (String)
         Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(RecallIcons.Search, contentDescription = null, tint = muted, modifier = Modifier.size(18.dp))
             Box(Modifier.weight(1f)) {
-                if (query.isEmpty()) Text("Search memories", style = MaterialTheme.typography.bodyLarge, color = muted)
+                if (query.isEmpty()) Text("Search memories, people, places", style = MaterialTheme.typography.bodyLarge, color = muted)
                 BasicTextField(
                     value = query,
                     onValueChange = onQueryChange,
                     enabled = enabled,
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Search memories" },
+                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Search memories, people, places" },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 )
