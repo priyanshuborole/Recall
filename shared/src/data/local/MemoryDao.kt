@@ -49,6 +49,9 @@ interface MemoryDao {
     @Query("UPDATE memory SET title = :title, updatedAt = :now WHERE id = :id")
     suspend fun setTitle(id: String, title: String, now: Long)
 
+    @Query("UPDATE memory SET body = :body, updatedAt = :now WHERE id = :id")
+    suspend fun setBody(id: String, body: String, now: Long)
+
     @Query("UPDATE memory SET mood = :mood, updatedAt = :now WHERE id = :id")
     suspend fun setMood(id: String, mood: String?, now: Long)
 

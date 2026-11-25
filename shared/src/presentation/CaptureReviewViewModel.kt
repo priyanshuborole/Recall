@@ -48,28 +48,43 @@ class CaptureReviewViewModel(
     val messages: Flow<String> = _messages.receiveAsFlow()
 
     private var pendingTitle: String? = null
-    private var titleJob: Job? = null
+    private var pendingBody: String? = null
+    private var typingJob: Job? = null
     private var photoJob: Job? = null
 
     fun onTitleChange(title: String) {
         pendingTitle = title
-        titleJob?.cancel()
-        titleJob = viewModelScope.launch {
+        saveAfterPause()
+    }
+
+    fun onBodyChange(body: String) {
+        pendingBody = body
+        saveAfterPause()
+    }
+
+    private fun saveAfterPause() {
+        typingJob?.cancel()
+        typingJob = viewModelScope.launch {
             delay(TITLE_SAVE_DELAY_MS)
-            flushTitle()
+            flushTyping()
         }
     }
 
-    /** Saves a title still waiting on the typing delay, for when the screen closes. */
+    /** Saves typing still waiting on the pause, for when the screen closes. */
     fun saveNow() {
-        titleJob?.cancel()
-        viewModelScope.launch { flushTitle() }
+        typingJob?.cancel()
+        viewModelScope.launch { flushTyping() }
     }
 
-    private suspend fun flushTitle() {
-        val title = pendingTitle ?: return
+    private suspend fun flushTyping() {
+        val title = pendingTitle
+        val body = pendingBody
         pendingTitle = null
-        withContext(NonCancellable) { repository.setTitle(memoryId, title) }
+        pendingBody = null
+        withContext(NonCancellable) {
+            title?.let { repository.setTitle(memoryId, it) }
+            body?.let { repository.setBody(memoryId, it) }
+        }
     }
 
     fun setMood(mood: Mood?) {
