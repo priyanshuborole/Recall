@@ -2,6 +2,7 @@ package com.zerotwodev.recall
 
 import com.zerotwodev.recall.domain.AudioRecorder
 import com.zerotwodev.recall.domain.MemoryRepository
+import com.zerotwodev.recall.domain.AppLock
 import com.zerotwodev.recall.domain.MicPermission
 import com.zerotwodev.recall.domain.NotificationPermission
 import com.zerotwodev.recall.domain.ReminderScheduler
@@ -24,5 +25,6 @@ class AppContainer(
     val imageStore: ImageStore,
     val reminderScheduler: ReminderScheduler,
     val notificationPermission: NotificationPermission,
+    val appLock: AppLock,
     val clock: Clock = Clock.System,
 )

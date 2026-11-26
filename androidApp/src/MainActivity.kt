@@ -48,7 +48,11 @@ class MainActivity : ComponentActivity() {
         notificationPermission.onResult(granted)
     }
 
+    private val appLock: AndroidAppLock
+        get() = (application as RecallApp).container.appLock as AndroidAppLock
+
     override fun onDestroy() {
+        appLock.attach(null)
         micPermission.launcher = null
         notificationPermission.launcher = null
         photoPicker.launcher = null
@@ -59,6 +63,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         val container = (application as RecallApp).container
+        appLock.attach(this)
         micPermission.launcher = { micPrompt.launch(Manifest.permission.RECORD_AUDIO) }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermission.launcher = { notificationPrompt.launch(Manifest.permission.POST_NOTIFICATIONS) }

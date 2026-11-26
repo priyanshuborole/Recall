@@ -56,6 +56,13 @@ object RecallIcons {
             )
         }
     }.build()
+    val Fingerprint = icon(
+        "Fingerprint",
+        "M12 11.5v4.5", "M8.5 12a3.5 3.5 0 0 1 7 0v3.5", "M6 12a6 6 0 0 1 12 0v2", "M6 15.5a10 10 0 0 0 1.5 4",
+        "M3.5 12a8.5 8.5 0 0 1 3-6.5", "M9 4a8.5 8.5 0 0 1 11.5 8v1", "M12 19.5c-.8-1-1.3-2-1.5-3",
+        strokeWidth = 1.5f,
+    )
+    val Shield = icon("Shield", "M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z", strokeWidth = 2f)
     val Close = icon("Close", "M6 6l12 12M18 6L6 18")
     val Check = icon("Check", "M5 12l5 5 9-10", strokeWidth = 2.2f)
     val Plus = icon("Plus", "M12 5v14M5 12h14")

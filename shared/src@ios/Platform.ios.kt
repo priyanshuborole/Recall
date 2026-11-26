@@ -8,6 +8,7 @@ import com.zerotwodev.recall.data.local.AppDatabase
 import com.zerotwodev.recall.data.local.RoomMemoryRepository
 import com.zerotwodev.recall.data.local.buildDatabase
 import com.zerotwodev.recall.domain.AudioRecorder
+import com.zerotwodev.recall.domain.AppLock
 import com.zerotwodev.recall.domain.MicPermission
 import com.zerotwodev.recall.domain.NotificationPermission
 import com.zerotwodev.recall.domain.ReminderScheduler
@@ -37,6 +38,7 @@ fun createAppContainer(): AppContainer {
         imageStore = UnavailableImageStore,
         reminderScheduler = UnavailableReminderScheduler,
         notificationPermission = UnavailableNotificationPermission,
+        appLock = UnavailableAppLock,
         clock = clock,
     )
 }
@@ -55,6 +57,12 @@ private object UnavailableReminderScheduler : ReminderScheduler {
 private object UnavailableNotificationPermission : NotificationPermission {
     override fun isGranted() = false
     override suspend fun request() = false
+}
+
+// LocalAuthentication goes here when iOS work resumes.
+private object UnavailableAppLock : AppLock {
+    override fun canLock() = false
+    override suspend fun unlock() = false
 }
 
 private object UnavailableImageStore : ImageStore {

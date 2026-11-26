@@ -28,6 +28,7 @@ fun createAppContainer(context: Context): AppContainer {
         imageStore = AndroidImageStore(appContext),
         reminderScheduler = AndroidReminderScheduler(appContext),
         notificationPermission = AndroidNotificationPermission(appContext),
+        appLock = AndroidAppLock(appContext),
         clock = clock,
     )
 }

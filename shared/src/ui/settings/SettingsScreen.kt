@@ -17,6 +17,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,10 +33,12 @@ import com.zerotwodev.recall.util.minuteOfDayText
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onOpenAppearance: () -> Unit,
+    onMessage: (String) -> Unit = {},
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     var pickTime by remember { mutableStateOf(false) }
     val itemColors = ListItemDefaults.colors(containerColor = Color.Transparent)
+    LaunchedEffect(viewModel) { viewModel.messages.collect { onMessage(it) } }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 16.dp)) {
         Text("Settings", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(horizontal = 20.dp))
@@ -58,7 +61,7 @@ fun SettingsScreen(
         SectionTitle("Privacy")
         ListItem(
             headlineContent = { Text("App lock") },
-            supportingContent = { Text("Ask for fingerprint, Face ID or PIN when opening") },
+            supportingContent = { Text("Ask for your fingerprint or phone PIN when you come back") },
             trailingContent = { Switch(checked = settings.appLockEnabled, onCheckedChange = viewModel::setAppLockEnabled) },
             colors = itemColors,
         )

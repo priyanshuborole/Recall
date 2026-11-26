@@ -31,6 +31,8 @@ import com.zerotwodev.recall.presentation.VoiceCaptureViewModel
 import com.zerotwodev.recall.ui.capture.CaptureReviewScreen
 import com.zerotwodev.recall.ui.detail.MemoryDetailScreen
 import com.zerotwodev.recall.ui.home.HomeScreen
+import com.zerotwodev.recall.ui.lock.LockScreen
+import com.zerotwodev.recall.ui.lock.rememberAppLockState
 import com.zerotwodev.recall.ui.onboarding.OnboardingScreen
 import com.zerotwodev.recall.ui.settings.AppearanceScreen
 import com.zerotwodev.recall.ui.settings.SettingsScreen
@@ -93,6 +95,8 @@ fun App(
     // The saved theme and mode drive the whole app; changing them on Appearance recolours it instantly.
     val settings by container.settingsRepository.settings.collectAsState()
 
+    val appLockState = rememberAppLockState(settings.appLockEnabled, container.clock)
+
     RecallTheme(theme = settings.theme, darkTheme = settings.themeMode.isDark()) {
         if (!settings.onboardingDone) {
             val scope = rememberCoroutineScope()
@@ -109,6 +113,11 @@ fun App(
                     }
                 },
             )
+            return@RecallTheme
+        }
+        // If the phone's screen lock was removed later, there is nothing to unlock with, so don't lock.
+        if (settings.appLockEnabled && appLockState.locked && container.appLock.canLock()) {
+            LockScreen(unlock = { if (container.appLock.unlock()) appLockState.locked = false })
             return@RecallTheme
         }
         val snackbar = remember { SnackbarHostState() }
@@ -177,12 +186,13 @@ fun App(
                         onGoHome = { navigator.switchTab(Screen.Home) },
                     )
                     Screen.Settings -> SettingsScreen(
-                        viewModel = viewModel { SettingsViewModel(container.settingsRepository, container.notificationPermission) },
+                        viewModel = viewModel { SettingsViewModel(container.settingsRepository, container.notificationPermission, container.appLock) },
                         onOpenAppearance = { navigator.open(Screen.Appearance) },
+                        onMessage = showMessage,
                     )
                     Screen.Appearance -> AppearanceScreen(
                         // Same ViewModel instance as Settings (same type, no key).
-                        viewModel = viewModel { SettingsViewModel(container.settingsRepository, container.notificationPermission) },
+                        viewModel = viewModel { SettingsViewModel(container.settingsRepository, container.notificationPermission, container.appLock) },
                         onBack = { navigator.back() },
                     )
                     is Screen.Detail -> MemoryDetailScreen(

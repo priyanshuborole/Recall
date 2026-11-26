@@ -3,7 +3,11 @@ package com.zerotwodev.recall.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zerotwodev.recall.domain.AppTheme
+import com.zerotwodev.recall.domain.AppLock
 import com.zerotwodev.recall.domain.NotificationPermission
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import com.zerotwodev.recall.domain.SettingsRepository
 import com.zerotwodev.recall.domain.ThemeMode
 import com.zerotwodev.recall.domain.UserSettings
@@ -15,7 +19,11 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(
     private val repository: SettingsRepository,
     private val notificationPermission: NotificationPermission,
+    private val appLock: AppLock,
 ) : ViewModel() {
+
+    private val _messages = Channel<String>(Channel.BUFFERED)
+    val messages: Flow<String> = _messages.receiveAsFlow()
 
     val settings: StateFlow<UserSettings> = repository.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserSettings())
@@ -31,8 +39,15 @@ class SettingsViewModel(
         viewModelScope.launch { repository.setReminderMinuteOfDay(minuteOfDay) }
     }
 
+    /** Both turning it on and off ask for the fingerprint or PIN, so someone else can't change it. */
     fun setAppLockEnabled(enabled: Boolean) {
-        viewModelScope.launch { repository.setAppLockEnabled(enabled) }
+        viewModelScope.launch {
+            if (!appLock.canLock()) {
+                _messages.send("Set a screen lock on your phone first. Recall uses it to lock your memories.")
+                return@launch
+            }
+            if (appLock.unlock()) repository.setAppLockEnabled(enabled)
+        }
     }
 
     fun setTheme(theme: AppTheme) {
