@@ -100,7 +100,11 @@ fun App(
                 initialReminderMinute = settings.reminderMinuteOfDay,
                 onFinish = { minute ->
                     scope.launch {
-                        minute?.let { container.settingsRepository.setReminderMinuteOfDay(it) }
+                        if (minute != null) {
+                            container.settingsRepository.setReminderMinuteOfDay(minute)
+                            // Asked here, right after choosing a time, so the prompt makes sense.
+                            container.notificationPermission.request()
+                        }
                         container.settingsRepository.setOnboardingDone()
                     }
                 },
@@ -173,12 +177,12 @@ fun App(
                         onGoHome = { navigator.switchTab(Screen.Home) },
                     )
                     Screen.Settings -> SettingsScreen(
-                        viewModel = viewModel { SettingsViewModel(container.settingsRepository) },
+                        viewModel = viewModel { SettingsViewModel(container.settingsRepository, container.notificationPermission) },
                         onOpenAppearance = { navigator.open(Screen.Appearance) },
                     )
                     Screen.Appearance -> AppearanceScreen(
                         // Same ViewModel instance as Settings (same type, no key).
-                        viewModel = viewModel { SettingsViewModel(container.settingsRepository) },
+                        viewModel = viewModel { SettingsViewModel(container.settingsRepository, container.notificationPermission) },
                         onBack = { navigator.back() },
                     )
                     is Screen.Detail -> MemoryDetailScreen(

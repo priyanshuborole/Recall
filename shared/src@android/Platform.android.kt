@@ -8,6 +8,7 @@ import com.zerotwodev.recall.data.SettingsRepositoryImpl
 import com.zerotwodev.recall.data.local.AppDatabase
 import com.zerotwodev.recall.data.local.RoomMemoryRepository
 import com.zerotwodev.recall.data.local.buildDatabase
+import com.zerotwodev.recall.domain.UserSettings
 import kotlin.time.Clock
 
 /** Called once from the Android Application. */
@@ -20,16 +21,22 @@ fun createAppContainer(context: Context): AppContainer {
     val clock = Clock.System
     return AppContainer(
         memoryRepository = RoomMemoryRepository(database, clock),
-        settingsRepository = SettingsRepositoryImpl(
-            SharedPreferencesStore(appContext.getSharedPreferences("recall_settings", Context.MODE_PRIVATE))
-        ),
+        settingsRepository = SettingsRepositoryImpl(settingsStore(appContext)),
         speechTranscriber = AndroidSpeechTranscriber(appContext),
         micPermission = AndroidMicPermission(appContext),
         photoPicker = AndroidPhotoPicker(appContext),
         imageStore = AndroidImageStore(appContext),
+        reminderScheduler = AndroidReminderScheduler(appContext),
+        notificationPermission = AndroidNotificationPermission(appContext),
         clock = clock,
     )
 }
+
+private fun settingsStore(context: Context): KeyValueStore =
+    SharedPreferencesStore(context.getSharedPreferences("recall_settings", Context.MODE_PRIVATE))
+
+/** For code that runs without the app container, such as the reminder receiver. */
+internal fun readSettings(context: Context): UserSettings = SettingsRepositoryImpl(settingsStore(context)).settings.value
 
 private class SharedPreferencesStore(private val prefs: SharedPreferences) : KeyValueStore {
     override fun getBoolean(key: String, default: Boolean) = prefs.getBoolean(key, default)

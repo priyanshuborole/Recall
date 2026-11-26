@@ -41,8 +41,16 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.PickMultipleVisualMedia(MAX_PHOTOS_AT_ONCE),
     ) { uris -> photoPicker.onResult(uris) }
 
+    private val notificationPermission: AndroidNotificationPermission
+        get() = (application as RecallApp).container.notificationPermission as AndroidNotificationPermission
+
+    private val notificationPrompt = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        notificationPermission.onResult(granted)
+    }
+
     override fun onDestroy() {
         micPermission.launcher = null
+        notificationPermission.launcher = null
         photoPicker.launcher = null
         super.onDestroy()
     }
@@ -52,6 +60,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val container = (application as RecallApp).container
         micPermission.launcher = { micPrompt.launch(Manifest.permission.RECORD_AUDIO) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermission.launcher = { notificationPrompt.launch(Manifest.permission.POST_NOTIFICATIONS) }
+        }
         photoPicker.launcher = {
             photoPrompt.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }

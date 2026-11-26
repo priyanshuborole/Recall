@@ -8,6 +8,8 @@ import com.zerotwodev.recall.data.local.AppDatabase
 import com.zerotwodev.recall.data.local.RoomMemoryRepository
 import com.zerotwodev.recall.data.local.buildDatabase
 import com.zerotwodev.recall.domain.MicPermission
+import com.zerotwodev.recall.domain.NotificationPermission
+import com.zerotwodev.recall.domain.ReminderScheduler
 import com.zerotwodev.recall.domain.PhotoPickResult
 import com.zerotwodev.recall.domain.PhotoPicker
 import com.zerotwodev.recall.domain.SpeechEvent
@@ -35,6 +37,8 @@ fun createAppContainer(): AppContainer {
         micPermission = UnavailableMicPermission,
         photoPicker = UnavailablePhotoPicker,
         imageStore = UnavailableImageStore,
+        reminderScheduler = UnavailableReminderScheduler,
+        notificationPermission = UnavailableNotificationPermission,
         clock = clock,
     )
 }
@@ -42,6 +46,17 @@ fun createAppContainer(): AppContainer {
 private object UnavailablePhotoPicker : PhotoPicker {
     override suspend fun pick(): PhotoPickResult = PhotoPickResult.Failed
     override suspend fun delete(fileName: String) = Unit
+}
+
+// UNUserNotificationCenter goes here when iOS work resumes.
+private object UnavailableReminderScheduler : ReminderScheduler {
+    override fun schedule(minuteOfDay: Int) = Unit
+    override fun cancel() = Unit
+}
+
+private object UnavailableNotificationPermission : NotificationPermission {
+    override fun isGranted() = false
+    override suspend fun request() = false
 }
 
 private object UnavailableImageStore : ImageStore {

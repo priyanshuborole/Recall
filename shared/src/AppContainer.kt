@@ -2,6 +2,8 @@ package com.zerotwodev.recall
 
 import com.zerotwodev.recall.domain.MemoryRepository
 import com.zerotwodev.recall.domain.MicPermission
+import com.zerotwodev.recall.domain.NotificationPermission
+import com.zerotwodev.recall.domain.ReminderScheduler
 import com.zerotwodev.recall.domain.PhotoPicker
 import com.zerotwodev.recall.domain.SettingsRepository
 import com.zerotwodev.recall.domain.SpeechTranscriber
@@ -20,5 +22,7 @@ class AppContainer(
     val micPermission: MicPermission,
     val photoPicker: PhotoPicker,
     val imageStore: ImageStore,
+    val reminderScheduler: ReminderScheduler,
+    val notificationPermission: NotificationPermission,
     val clock: Clock = Clock.System,
 )
